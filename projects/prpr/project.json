@@ -15,27 +15,27 @@
     },
     {
       "title": "Walk the list",
-      "startMs": 5695,
+      "startMs": 4952,
       "narration": "Arrow through them."
     },
     {
       "title": "The detail pane",
-      "startMs": 7433,
+      "startMs": 7378,
       "narration": "The detail pane shows the branch, the diff stat and the reviewers."
     },
     {
       "title": "Filter down to one repository",
-      "startMs": 11336,
+      "startMs": 11282,
       "narration": "Filtering searches titles, repositories, authors and labels at once."
     },
     {
       "title": "Tabs",
-      "startMs": 16844,
+      "startMs": 15608,
       "narration": "Four tabs — everything, yours, awaiting your review, and drafts."
     },
     {
       "title": "Wait for the refresh that finds #127 merged",
-      "startMs": 26260,
+      "startMs": 20353,
       "narration": "And it waves goodbye."
     }
   ],

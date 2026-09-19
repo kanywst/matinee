@@ -1,18 +1,125 @@
+<img src="docs/demo.gif" alt="matinee turning the y509 VHS tape into a chaptered demo video" width="760">
+
+[![CI](https://github.com/kanywst/matinee/actions/workflows/ci.yml/badge.svg)](https://github.com/kanywst/matinee/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 # matinee
 
-**Your VHS tape already is the script. matinee gives it a voice.**
+Turn a [VHS](https://github.com/charmbracelet/vhs) `.tape` into a narrated, chaptered demo video.
 
-[VHS](https://github.com/charmbracelet/vhs) records a terminal session into a GIF from a `.tape` file. matinee takes that same tape and produces a **narrated, chaptered, captioned video** — in 16:9 for your README and talks, and 9:16 for social — without you writing a single timestamp.
+[Quick start](#quick-start) · [Adding your repo](#adding-your-repo) · [How it works](#how-it-works) · [Limitations](#limitations)
 
-Everything except one optional step runs locally and free. There is no API key.
-
-## Why
-
-A GIF shows what your tool does. It cannot tell anyone *why* they should care, and it cannot be posted anywhere that expects a video with sound.
-
-The usual answer is to record your screen and edit it by hand, which drifts out of date the moment the UI changes. matinee's answer is that you already maintain a script for the demo — the tape — so the video should be generated from it, the same way the GIF is.
+> The GIF above is silent, because GIFs are. The real output has a voice track, word-synced captions and per-chapter framing — which is the whole point, and the one thing a GIF cannot show you.
 
 ## What it does
+
+- **Reuses the tape you already have.** If your repo records a README GIF with VHS, matinee builds a video from the same file. No second script to keep in sync.
+- **Chapters come from your tape's comments.** `# Search` above a step becomes a chapter. You never write a timestamp.
+- **Narration is yours, timing is derived.** You write one line per chapter; it gets spoken, laid down at that chapter's start, and captioned word-by-word from the audio that was actually produced.
+- **16:9 and 9:16 from one source.** The vertical cut can zoom to whichever pane each chapter is about, so a dense TUI stays readable on a phone.
+- **Local and free.** No API key. Recording, narration, captions and rendering all run on your machine.
+
+## Quick start
+
+```bash
+git clone https://github.com/kanywst/matinee && cd matinee
+npm install
+make video PROJECT=y509
+```
+
+`out/y509-16x9.mp4` and `out/y509-9x16.mp4`.
+
+Three worked examples ship in `projects/`: [y509](https://github.com/kanywst/y509), [prpr](https://github.com/kanywst/prpr) and [brtc](https://github.com/kanywst/brtc). Their tapes disagree about theme, resolution, framerate and comment style, which is deliberate — that variety is what the parser is built against.
+
+## Install
+
+### macOS
+
+```bash
+brew install vhs ffmpeg whisper.cpp
+npm install
+
+# whisper model for captions
+mkdir -p ~/.cache/whisper && cd ~/.cache/whisper
+curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+```
+
+Narration uses the built-in `say`. Nothing else to install.
+
+### Linux
+
+```bash
+# vhs needs ttyd and ffmpeg; see charmbracelet/vhs for your distro
+sudo apt-get install -y ffmpeg espeak-ng
+npm install
+
+mkdir -p ~/.cache/whisper && cd ~/.cache/whisper
+curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+```
+
+For narration, either `espeak-ng` (installed above — robotic but instant) or [piper](https://github.com/rhasspy/piper) for something listenable:
+
+```bash
+uv tool install piper-tts
+mkdir -p ~/.cache/piper && cd ~/.cache/piper
+curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
+curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
+```
+
+### Japanese narration
+
+```bash
+docker run -d --name voicevox -p 50021:50021 voicevox/voicevox_engine:cpu-latest
+```
+
+Set `lang: ja` in your `script.yaml`. Captions need the multilingual whisper model (`ggml-base.bin`) rather than `ggml-base.en.bin`.
+
+**Each VOICEVOX character has its own terms of use.** Check the one you pick before publishing anything.
+
+Python runs through [uv](https://docs.astral.sh/uv/) — each script declares its own dependencies inline, so there is no environment to create.
+
+## Adding your repo
+
+**1.** Write `projects/<id>/script.yaml`:
+
+```yaml
+id: y509
+title: y509
+subtitle: X.509 chains in your terminal.
+repo: github.com/kanywst/y509
+accent: "#a6e3a1"
+lang: en
+
+source:
+  repoDir: ~/y509
+  tapeRel: demo.tape
+
+narration:
+  Launch: y509 opens any certificate chain in your terminal.
+  Search: Search jumps straight to a certificate.
+
+# Optional, 9:16 only: zoom to the part of the screen each chapter is about.
+crop:
+  Search: { x: 0.14, y: 0.24, w: 0.72, h: 0.46 }
+```
+
+Keys under `narration` and `crop` are chapter titles. A chapter you leave out plays silent, or unzoomed, which is often the right answer.
+
+**2.** Add two lines to `projects/registry.ts` — an import and an array entry.
+
+**3.** `make video PROJECT=<id>`
+
+### What your tape needs
+
+Chapters come from section comments:
+
+- A **numbered** comment is always a section: `# 3. Search`.
+- An **unnumbered** comment is a section when it stands alone on one line. A block of several consecutive comment lines is prose and is ignored — that is how the explanatory paragraphs in real tapes stay out of the chapter list.
+- A tape with no section comments is an error, not an empty video.
+
+If your tape assumes a built binary, build it first. matinee runs the tape verbatim and builds nothing for you.
+
+## How it works
 
 ```text
 your-repo/demo.tape
@@ -24,84 +131,27 @@ your-repo/demo.tape
         └─ render    composite, both aspect ratios            → out/*.mp4
 ```
 
-Chapters come from the comments already in your tape:
+Each step is a `make` target, so you can rerun just the one you changed. `make studio` opens the [Remotion](https://www.remotion.dev) studio to preview interactively.
 
-```tape
-# Search
-Type "/"
-Sleep 500ms
-```
+**The tape is the source of truth.** Chapter titles and timings are derived from it, which means editing the demo moves the chapters with it. Narration does not follow automatically — a renamed section drops its line with a warning.
 
-You write one `script.yaml` per repo — a title, a subtitle, an accent colour, and one line of narration per chapter. Nothing in it is a timestamp.
+**Captions transcribe the audio, not the script.** That gets the real timings, including the pauses the voice chose. The cost is that a word the TTS slurs comes back misspelled; read them before publishing.
 
-## Quickstart
+**Timings are estimated, then scaled.** The tape walk models typing and sleeps but not render time, so it over-shoots; the marks are scaled to the recording's measured length.
 
-```bash
-brew install vhs ffmpeg whisper.cpp
-npm install
+## Limitations
 
-# whisper model. base.en is English-only; other languages need ggml-base.bin.
-mkdir -p ~/.cache/whisper && cd ~/.cache/whisper
-curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
-```
+- **VHS's own encoders can fail silently.** VHS v0.12.0 shells out to ffmpeg for GIF and MP4, and against ffmpeg 9.x that call writes nothing while still logging "Creating …" and exiting 0. matinee sidesteps it by taking VHS's PNG frame output and encoding that itself — which also means the window chrome VHS would have drawn is redrawn in `TerminalStage.tsx`.
+- **The recording is not reproducible.** A tape may fetch and build before it records, so clip length depends on the machine and on cache state. That is why the chapter marks are scaled to the measured duration rather than trusted from the estimate.
+- **Chapter timings drift within a tape.** Scaling corrects the total, not a demo with one unusually slow step.
+- **`say` is macOS-only**, and `espeak` sounds like 1998. Linux narration worth listening to means installing piper.
 
-Then, from the repo:
+## Contributing
 
-```bash
-make video PROJECT=y509
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md). The most useful thing you can send is **a tape matinee gets wrong** — every bug the parser has had came from a real tape doing something reasonable it did not expect.
 
-`out/y509-16x9.mp4` and `out/y509-9x16.mp4`. `make studio` opens the [Remotion](https://www.remotion.dev) studio to preview interactively.
+## License
 
-Three worked examples ship in `projects/`: [y509](https://github.com/kanywst/y509) (9 chapters), [prpr](https://github.com/kanywst/prpr) (6) and [brtc](https://github.com/kanywst/brtc) (2). Their tapes differ in theme, resolution, framerate and comment style, which is the point.
+[MIT](LICENSE).
 
-## Adding your repo
-
-1. Write `projects/<id>/script.yaml`: `id`, `title`, `subtitle`, `repo`, `accent`, `lang`, a `source` block naming your repo and its tape, and `narration` keyed by chapter title.
-2. Add two lines to `projects/registry.ts` — an import and an array entry.
-3. `make video PROJECT=<id>`
-
-### What your tape needs
-
-Chapters come from section comments, so the tape needs them:
-
-- A **numbered** comment is always a section: `# 3. Search`.
-- An **unnumbered** comment is a section when it stands alone. A block of several consecutive comment lines is treated as prose and ignored, which keeps the explanatory paragraphs in real tapes out of the chapter list.
-- No section comments at all is an error, not an empty video.
-
-If your tape assumes a built binary, build it first — matinee runs the tape verbatim and does not build anything for you.
-
-## Narration
-
-| `lang` | Backend | Notes |
-| --- | --- | --- |
-| `en` | macOS `say` | Built in, nothing to install. macOS only. |
-| `ja` | [VOICEVOX](https://voicevox.hiroshiba.jp/) | `docker run -d -p 50021:50021 voicevox/voicevox_engine:cpu-latest`. **Each character has its own terms of use — check the one you pick before publishing.** |
-
-Each chapter is synthesised on its own and laid down at its chapter's start time, so the voice stays locked to what is on screen even when you reword a line. A line that overruns its chapter is reported by name rather than silently overlapping the next one.
-
-Captions are produced by transcribing the audio that was actually generated, not by reusing the script. That is deliberate — it gets the real timings, including the pauses the TTS chose — but it means a word the TTS slurs can come back misspelled. Read the captions before you publish.
-
-## The one paid step
-
-`scripts/broll.py` generates an abstract clip to sit behind the title card, via [fal.ai](https://fal.ai). It is opt-in, it needs `FAL_KEY`, and it is the only thing here that costs money. Without it the title card is a flat colour, which is a perfectly good title card.
-
-`--dry-run` prints the request and the cache key without generating anything. Results are cached on a hash of the model and every parameter, so re-running after editing anything else is free.
-
-## Requirements
-
-- `vhs`, `ffmpeg` (with `ffprobe`), `node`, `uv`
-- `whisper-cli` and a model, for captions
-- macOS for the `en` narration backend; VOICEVOX for `ja`
-
-## Licensing
-
-matinee is MIT. **Remotion, which it uses to render, is not.** Remotion is free for individuals, non-profits, and for-profit organisations with up to three employees; larger organisations need a [company licence](https://www.remotion.dev/docs/licensing). Check where you fall before using this at work.
-
-## Known limitations
-
-- **VHS's own encoders can fail silently.** VHS v0.12.0 shells out to ffmpeg for GIF and MP4, and against ffmpeg 9.x that call writes nothing while still logging "Creating …" and exiting 0. matinee sidesteps it by taking VHS's PNG frame output and encoding that itself, which also means the window chrome VHS would have drawn is redrawn in `TerminalStage.tsx`.
-- **The recording is not reproducible.** A tape may fetch and build before it records, so clip length depends on the machine and on cache state. Chapter marks are scaled to the measured duration rather than trusted from the estimate.
-- **Chapter timings are estimated, then scaled.** The static walk over the tape models typing and sleeps but not render time, and over-shoots — on y509's tape, 34275ms estimated against 27880ms actual. The scaling corrects the total, not a demo with one unusually slow step.
-- **9:16 is legible but small for a dense TUI.** The clip is fitted whole rather than zoomed. Per-chapter crop regions, so the vertical cut follows whichever pane is active, are the fix and are not built yet.
-- **`say` is macOS-only.** Linux narration needs a backend that does not exist here yet.
+matinee renders with [Remotion](https://www.remotion.dev), which is **not** MIT: it is free for individuals, non-profits, and companies with up to three employees, and larger organisations need a [company licence](https://www.remotion.dev/docs/licensing). Check where you fall before using this at work.

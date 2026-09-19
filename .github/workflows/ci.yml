@@ -1,0 +1,180 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Granted per job instead. Repos created before Feb 2023 default to
+# read-write, so this is not redundant.
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Test
+        run: npx vitest run
+
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+      - name: Lint
+        run: uvx ruff check --output-format=github .
+      - name: Format
+        run: uvx ruff format --check .
+      - name: Test
+        run: uv run --with pytest --with pyyaml pytest
+
+  lint:
+    name: Shell, Markdown, Actions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ShellCheck
+        run: shellcheck scripts/*.sh
+      - name: Markdown
+        run: npx --yes markdownlint-cli2 "**/*.md" "#node_modules"
+      - name: actionlint
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+  # The test that is worth more than all the unit tests: record a real tape,
+  # narrate it, render it, and prove the result has both a video and an audio
+  # stream. Everything else only checks the pieces.
+  e2e:
+    name: End to end (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+      - uses: charmbracelet/vhs-action@f6d7db07a432fcd3b06772628d36a57f96d95dcf # v2.1.1
+        with:
+          install-fonts: true
+      - run: npm ci
+
+      # espeak is the CI narration backend: robotic, but apt-installable and
+      # instant, so the run needs no voice model download.
+      - name: Install espeak (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y espeak-ng
+      - name: Install espeak (macOS)
+        if: runner.os == 'macOS'
+        run: brew install espeak-ng
+
+      - name: Record
+        run: ./scripts/record.sh smoke . tests/fixtures/smoke/demo.tape 1
+      - name: Build project
+        run: uv run --with pyyaml scripts/build_project.py tests/fixtures/smoke/script.yaml
+      - name: Narrate
+        run: |
+          uv run --with pyyaml scripts/tts.py \
+            tests/fixtures/smoke/script.yaml --backend espeak
+          uv run --with pyyaml scripts/build_project.py \
+            tests/fixtures/smoke/script.yaml
+      # --props replaces the whole props object, so the project has to be
+      # wrapped the way defaultProps shapes it. Rendering through an existing
+      # composition keeps the smoke fixture out of projects/registry.ts;
+      # calculateMetadata takes the duration from these props, so the output is
+      # the length of the smoke recording and not of y509's.
+      - name: Render
+        run: |
+          python3 -c "import json,pathlib; \
+            p=json.loads(pathlib.Path('tests/fixtures/smoke/project.json').read_text()); \
+            pathlib.Path('smoke-props.json').write_text( \
+              json.dumps({'project': p, 'vertical': False}))"
+          npx remotion render src/index.ts y509-16x9 out/smoke.mp4 \
+            --props=smoke-props.json
+
+      - name: Assert the output is a real video with sound
+        run: |
+          set -euo pipefail
+          test -s out/smoke.mp4
+
+          duration=$(ffprobe -v error -show_entries format=duration \
+            -of csv=p=0 out/smoke.mp4)
+          echo "duration: ${duration}s"
+          awk -v d="$duration" 'BEGIN { exit (d > 1) ? 0 : 1 }' \
+            || { echo "::error::output is shorter than a second"; exit 1; }
+
+          streams=$(ffprobe -v error -show_entries stream=codec_type \
+            -of csv=p=0 out/smoke.mp4 | sort -u | tr '\n' ' ')
+          echo "streams: ${streams}"
+          case "$streams" in
+            *audio*) ;;
+            *) echo "::error::no audio stream — narration did not land"; exit 1 ;;
+          esac
+          case "$streams" in
+            *video*) ;;
+            *) echo "::error::no video stream"; exit 1 ;;
+          esac
+
+          chapters=$(python3 -c "import json;print(len(json.load(open('tests/fixtures/smoke/project.json'))['chapters']))")
+          echo "chapters: ${chapters}"
+          test "$chapters" -eq 2
+
+  # Advisory, not merge-blocking: reports newly introduced findings into Code
+  # Scanning without gating on the existing backlog.
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: Run zizmor
+        run: uvx zizmor --format sarif --no-exit-codes . > zizmor.sarif
+      - uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor

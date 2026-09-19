@@ -25,15 +25,24 @@ import sys
 from pathlib import Path
 
 import yaml
-
 from tape_timeline import scale_marks, timeline
 
 
 def probe_duration_ms(path: Path) -> int:
     out = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "csv=p=0", str(path)],
-        check=True, capture_output=True, text=True,
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "csv=p=0",
+            str(path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.strip()
     return int(float(out) * 1000)
 
@@ -46,9 +55,21 @@ def probe_size(path: Path) -> tuple[int, int]:
     tape's Set Width/Height and differs per repo.
     """
     out = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "v:0",
-         "-show_entries", "stream=width,height", "-of", "csv=p=0", str(path)],
-        check=True, capture_output=True, text=True,
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "csv=p=0",
+            str(path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.strip()
     width, height = (int(v) for v in out.split(",")[:2])
     return width, height
@@ -88,27 +109,39 @@ def main() -> None:
     marks = scale_marks(marks, estimated, duration_ms)
 
     narration = script.get("narration", {}) or {}
+    crops = script.get("crop", {}) or {}
     # Checked against every section the tape has, not only the ones that
     # survived the trailing-section filter -- otherwise narration written for
     # a trimmed final section is misreported as a typo.
-    unused = set(narration) - all_titles
+    unused = (set(narration) | set(crops)) - all_titles
     if unused:
         # Almost always a typo or a renamed tape section, and it fails quietly
         # as "that line never got read" if nobody says anything.
         print(
-            "warning: narration keys match no chapter: "
-            + ", ".join(sorted(unused)),
+            "warning: script.yaml keys match no chapter: " + ", ".join(sorted(unused)),
             file=sys.stderr,
         )
 
-    chapters = [
-        {
+    for title, crop in crops.items():
+        missing = {"x", "y", "w", "h"} - set(crop or {})
+        if missing:
+            sys.exit(
+                f"error: crop for '{title}' is missing {sorted(missing)}; "
+                "all of x, y, w, h are required, as 0..1 fractions"
+            )
+
+    chapters = []
+    for m in marks:
+        chapter = {
             "title": m["title"],
             "startMs": m["startMs"],
             "narration": narration.get(m["title"], ""),
         }
-        for m in marks
-    ]
+        # Only carried when set: an absent crop means the whole frame, which is
+        # also what every chapter gets in 16:9.
+        if m["title"] in crops:
+            chapter["crop"] = {k: float(crops[m["title"]][k]) for k in "xywh"}
+        chapters.append(chapter)
 
     out_path = args.script.parent / "project.json"
     # Captions take ~a minute of whisper to regenerate and are overwritten by
@@ -147,8 +180,10 @@ def main() -> None:
 
     out_path.write_text(json.dumps(project, indent=2, ensure_ascii=False) + "\n")
     print(f"==> wrote {out_path}")
-    print(f"    {len(chapters)} chapters, {duration_ms}ms, "
-          f"{len(project['captions'])} captions")
+    print(
+        f"    {len(chapters)} chapters, {duration_ms}ms, "
+        f"{len(project['captions'])} captions"
+    )
 
 
 if __name__ == "__main__":

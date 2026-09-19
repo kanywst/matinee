@@ -15,43 +15,85 @@
     },
     {
       "title": "Navigate certificate list",
-      "startMs": 3864,
-      "narration": ""
+      "startMs": 3803,
+      "narration": "",
+      "crop": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 0.52,
+        "h": 0.62
+      }
     },
     {
       "title": "Switch to details pane and browse tabs",
-      "startMs": 5409,
-      "narration": "Subject, issuer, validity, SANs — tab by tab."
+      "startMs": 5348,
+      "narration": "Subject, issuer, validity, SANs — tab by tab.",
+      "crop": {
+        "x": 0.5,
+        "y": 0.0,
+        "w": 0.5,
+        "h": 0.6
+      }
     },
     {
       "title": "Search",
-      "startMs": 10249,
-      "narration": "Search jumps straight to a certificate."
+      "startMs": 10188,
+      "narration": "Search jumps straight to a certificate.",
+      "crop": {
+        "x": 0.14,
+        "y": 0.24,
+        "w": 0.72,
+        "h": 0.46
+      }
     },
     {
       "title": "Filter",
-      "startMs": 13116,
-      "narration": "Filter narrows it to the expired ones."
+      "startMs": 13055,
+      "narration": "Filter narrows it to the expired ones.",
+      "crop": {
+        "x": 0.14,
+        "y": 0.24,
+        "w": 0.72,
+        "h": 0.46
+      }
     },
     {
       "title": "Validate",
-      "startMs": 16167,
+      "startMs": 16106,
       "narration": "Validate walks the trust path."
     },
     {
       "title": "Yank current cert as PEM",
-      "startMs": 18729,
-      "narration": "Yank copies a cert as PEM."
+      "startMs": 18668,
+      "narration": "Yank copies a cert as PEM.",
+      "crop": {
+        "x": 0.14,
+        "y": 0.24,
+        "w": 0.72,
+        "h": 0.46
+      }
     },
     {
       "title": "Export via huh form",
-      "startMs": 20722,
-      "narration": "Export writes it out in the format you pick."
+      "startMs": 20661,
+      "narration": "Export writes it out in the format you pick.",
+      "crop": {
+        "x": 0.14,
+        "y": 0.2,
+        "w": 0.72,
+        "h": 0.52
+      }
     },
     {
       "title": "Help",
-      "startMs": 25724,
-      "narration": "And every key is listed in the help."
+      "startMs": 25663,
+      "narration": "And every key is listed in the help.",
+      "crop": {
+        "x": 0.14,
+        "y": 0.26,
+        "w": 0.72,
+        "h": 0.44
+      }
     }
   ],
   "terminalSrc": "projects/y509/terminal.mp4",

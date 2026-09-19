@@ -1,0 +1,30 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Remotion ships its packages in lockstep; splitting them across PRs
+      # produces version skew that fails to build.
+      remotion:
+        patterns:
+          - remotion
+          - "@remotion/*"
+      dev:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+# The Python scripts declare their dependencies inline (PEP 723) so they run
+# under `uv run` with nothing installed. Dependabot does not read those blocks,
+# so there is no pip ecosystem to watch here.

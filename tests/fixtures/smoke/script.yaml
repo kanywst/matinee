@@ -1,0 +1,20 @@
+# The smallest complete project, used by the CI end-to-end job.
+#
+# `repoDir: .` points at matinee itself: the tape only echoes, so there is no
+# tool to build and nothing to install.
+
+id: smoke
+title: smoke
+subtitle: The end-to-end check — record, narrate, render, and prove the result has both streams.
+repo: github.com/kanywst/matinee
+accent: "#a6e3a1"
+
+lang: en
+
+source:
+  repoDir: .
+  tapeRel: tests/fixtures/smoke/demo.tape
+
+narration:
+  Say hello: This is the end to end check.
+  Say goodbye: And this is the second chapter.

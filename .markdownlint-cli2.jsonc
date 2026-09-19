@@ -1,0 +1,18 @@
+{
+  // Mirrors the author's global markdownlint config so CI enforces the same
+  // rules a checkout does. Not a relaxation: every rule disabled here is
+  // disabled globally too.
+  "config": {
+    "default": true,
+    // Paragraphs are written one per line rather than hard-wrapped, so diffs
+    // stay readable.
+    "MD013": false,
+    "MD024": false,
+    "MD033": { "allowed_elements": ["picture", "source", "img"] },
+    "MD036": false,
+    "MD041": false,
+    "MD060": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**"]
+}

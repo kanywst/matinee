@@ -80,8 +80,18 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         out_base = Path(tmpdir) / "words"
         cmd = [
-            "whisper-cli", "-m", str(model), "-f", str(wav),
-            "-ml", "1", "-sow", "-oj", "-of", str(out_base), "--no-prints",
+            "whisper-cli",
+            "-m",
+            str(model),
+            "-f",
+            str(wav),
+            "-ml",
+            "1",
+            "-sow",
+            "-oj",
+            "-of",
+            str(out_base),
+            "--no-prints",
         ]
         if lang != "en":
             cmd += ["-l", lang]
@@ -97,11 +107,13 @@ def main() -> None:
         text = segment["text"].strip()
         if not text:
             continue
-        captions.append({
-            "text": text,
-            "startMs": segment["offsets"]["from"],
-            "endMs": segment["offsets"]["to"],
-        })
+        captions.append(
+            {
+                "text": text,
+                "startMs": segment["offsets"]["from"],
+                "endMs": segment["offsets"]["to"],
+            }
+        )
 
     if not captions:
         sys.exit("error: whisper returned no words")
@@ -110,9 +122,7 @@ def main() -> None:
     # Stamps which recording these timings were measured against, so
     # build_project.py can warn when a re-record leaves them stale.
     project["captionsForDurationMs"] = project["terminalDurationMs"]
-    project_path.write_text(
-        json.dumps(project, indent=2, ensure_ascii=False) + "\n"
-    )
+    project_path.write_text(json.dumps(project, indent=2, ensure_ascii=False) + "\n")
     print(f"==> wrote {len(captions)} words into {project_path}")
 
 

@@ -8,6 +8,8 @@ import {
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
+import { cropAt, cropTransform, FULL_FRAME } from "../crop";
+import type { Chapter } from "../types";
 import { fitCard, WINDOW_BAR_HEIGHT } from "../layout";
 
 /**
@@ -24,9 +26,11 @@ export const TerminalStage: React.FC<{
   vertical: boolean;
   terminalWidth: number;
   terminalHeight: number;
-}> = ({ src, vertical, terminalWidth, terminalHeight }) => {
+  /** Only used in 9:16, to pick each chapter's zoom. */
+  chapters: Chapter[];
+}> = ({ src, vertical, terminalWidth, terminalHeight, chapters }) => {
   const frame = useCurrentFrame();
-  const { width: frameWidth, height: frameHeight } = useVideoConfig();
+  const { width: frameWidth, height: frameHeight, fps } = useVideoConfig();
 
   const { width, height, band } = fitCard(
     frameWidth,
@@ -42,6 +46,12 @@ export const TerminalStage: React.FC<{
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+
+  // 16:9 already shows the whole recording legibly, so the per-chapter zoom is
+  // a vertical-only affordance.
+  const crop = cropTransform(
+    vertical ? cropAt(chapters, (frame / fps) * 1000) : FULL_FRAME,
+  );
 
   return (
     <AbsoluteFill
@@ -95,16 +105,25 @@ export const TerminalStage: React.FC<{
             />
           ))}
         </div>
-        <OffthreadVideo
-          src={staticFile(src)}
-          muted
-          style={{
-            width: "100%",
-            height: height - WINDOW_BAR_HEIGHT,
-            display: "block",
-            objectFit: "contain",
-          }}
-        />
+        {/*
+          The zoom is a transform on the video inside an already-clipped card,
+          so a cropped chapter fills the same box rather than resizing it --
+          the window chrome stays put while the content moves.
+        */}
+        <div style={{ overflow: "hidden", height: height - WINDOW_BAR_HEIGHT }}>
+          <OffthreadVideo
+            src={staticFile(src)}
+            muted
+            style={{
+              width: "100%",
+              height: height - WINDOW_BAR_HEIGHT,
+              display: "block",
+              objectFit: "contain",
+              transform: crop.css,
+              transformOrigin: "center center",
+            }}
+          />
+        </div>
       </div>
     </AbsoluteFill>
   );

@@ -19,6 +19,19 @@ source:
   repoDir: ~/y509
   tapeRel: demo.tape
 
+# Per-chapter zoom for the 9:16 cut only, as 0..1 fractions of the recording.
+# A two-pane TUI fitted whole into a phone frame is legible only just, so each
+# chapter shows the pane it is actually about. Chapters left out here show the
+# whole frame. Ignored in 16:9.
+crop:
+  Navigate certificate list: { x: 0.0, y: 0.0, w: 0.52, h: 0.62 }
+  Switch to details pane and browse tabs: { x: 0.50, y: 0.0, w: 0.50, h: 0.60 }
+  Search: { x: 0.14, y: 0.24, w: 0.72, h: 0.46 }
+  Filter: { x: 0.14, y: 0.24, w: 0.72, h: 0.46 }
+  Yank current cert as PEM: { x: 0.14, y: 0.24, w: 0.72, h: 0.46 }
+  Export via huh form: { x: 0.14, y: 0.20, w: 0.72, h: 0.52 }
+  Help: { x: 0.14, y: 0.26, w: 0.72, h: 0.44 }
+
 narration:
   Launch: y509 opens any certificate chain in your terminal.
   Switch to details pane and browse tabs: Subject, issuer, validity, SANs — tab by tab.

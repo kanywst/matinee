@@ -12,6 +12,20 @@ export type Caption = {
   endMs: number;
 };
 
+/**
+ * A region of the recording, as fractions of its width and height.
+ *
+ * Normalised rather than in pixels so it survives a re-record at a different
+ * scale: `record.sh` doubles the tape's dimensions by default, and a tape may
+ * be re-recorded at another factor.
+ */
+export type Crop = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
 export type Chapter = {
   /** Shown in the corner while this section plays. */
   title: string;
@@ -19,6 +33,11 @@ export type Chapter = {
   startMs: number;
   /** Narration script for this chapter. Read by scripts/tts.py. */
   narration: string;
+  /**
+   * Optional zoom for the 9:16 cut, from script.yaml. Ignored in 16:9, where
+   * the whole recording already fits legibly.
+   */
+  crop?: Crop;
 };
 
 export type Project = {

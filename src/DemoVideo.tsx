@@ -52,6 +52,7 @@ export const DemoVideo: React.FC<{
           vertical={vertical}
           terminalWidth={project.terminalWidth}
           terminalHeight={project.terminalHeight}
+          chapters={project.chapters}
         />
 
         {project.audioSrc ? <Audio src={staticFile(project.audioSrc)} /> : null}

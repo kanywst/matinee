@@ -1,0 +1,29 @@
+# matinee's Python side is a handful of standalone scripts, each carrying its
+# own PEP 723 dependency block so `uv run scripts/x.py` works with nothing
+# installed. This file exists for the tools, not to make a package.
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "SIM",  # simplify
+    "RUF",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests import from scripts/ after a sys.path insert, which has to come first.
+"tests/*" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[dependency-groups]
+dev = ["pytest>=8", "pyyaml>=6"]

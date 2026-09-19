@@ -62,8 +62,20 @@ TOKEN_RE = re.compile(r'"[^"]*"|\'[^\']*\'|`[^`]*`|\S+')
 MAX_TITLE = 48
 
 KEYS = {
-    "Enter", "Tab", "Escape", "Space", "Backspace", "Delete",
-    "Up", "Down", "Left", "Right", "PageUp", "PageDown", "Home", "End",
+    "Enter",
+    "Tab",
+    "Escape",
+    "Space",
+    "Backspace",
+    "Delete",
+    "Up",
+    "Down",
+    "Left",
+    "Right",
+    "PageUp",
+    "PageDown",
+    "Home",
+    "End",
 }
 MODIFIERS = ("Ctrl+", "Alt+", "Shift+", "Cmd+")
 # Statements that take one argument and cost no time.
@@ -154,6 +166,18 @@ def timeline(tape: str) -> tuple[list[dict], float]:
                 pending = title
             continue
 
+        # Place the pending section *before* the statement it labels runs, not
+        # after: the chapter starts when its first command starts. Recording it
+        # at the end of the line put every chapter one statement late.
+        if pending is not None:
+            if hidden:
+                # A comment inside a Hide block documents the setup; it is not
+                # a chapter, and it must not resurface at the next Show.
+                pending = None
+            else:
+                marks.append({"title": pending, "startMs": round(now)})
+                pending = None
+
         tokens = TOKEN_RE.findall(line)
         t = 0
         while t < len(tokens):
@@ -192,7 +216,9 @@ def timeline(tape: str) -> tuple[list[dict], float]:
                 if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'`":
                     text = text[1:-1]
                 if not hidden:
-                    now += len(text) * (qualifier if qualifier is not None else typing_speed)
+                    now += len(text) * (
+                        qualifier if qualifier is not None else typing_speed
+                    )
                 continue
 
             if head == "Sleep":
@@ -210,15 +236,15 @@ def timeline(tape: str) -> tuple[list[dict], float]:
                     count = int(tokens[t])
                     t += 1
                 if not hidden:
-                    now += (qualifier if qualifier is not None else typing_speed) * count
+                    now += (
+                        qualifier if qualifier is not None else typing_speed
+                    ) * count
                 continue
 
             # Unknown command: consume nothing further and cost nothing.
 
-        if pending is not None and not hidden:
-            marks.append({"title": pending, "startMs": round(now)})
-            pending = None
-
+    # A section comment with no statement after it labels nothing, so it is
+    # deliberately dropped rather than pinned to the end of the tape.
     return marks, now
 
 
@@ -251,7 +277,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("tape", type=Path)
     parser.add_argument(
-        "--duration-ms", type=int, default=None,
+        "--duration-ms",
+        type=int,
+        default=None,
         help="true clip length from record.sh; scales the marks to fit",
     )
     args = parser.parse_args()
