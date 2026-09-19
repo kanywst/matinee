@@ -56,8 +56,9 @@ DURATION_RE = re.compile(r"^([0-9.]+)(ms|s|m)?$")
 # however long it runs.
 NUMBERED_RE = re.compile(r"^#\s*\d+[.)]\s*(\S.*)$")
 COMMENT_RE = re.compile(r"^\s*#\s?(.*)$")
-# Quoted strings survive tokenisation intact; everything else splits on space.
-TOKEN_RE = re.compile(r'"[^"]*"|\'[^\']*\'|`[^`]*`|\S+')
+# Quoted strings survive tokenisation intact, escapes included, so
+# `Type "say \\"hi\\""` counts as one token; everything else splits on space.
+TOKEN_RE = re.compile(r'"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|`[^`]*`|\S+')
 # Longest chapter title the chip can show without wrapping.
 MAX_TITLE = 48
 
@@ -76,6 +77,12 @@ KEYS = {
     "PageDown",
     "Home",
     "End",
+    # VHS's remaining keys. Left out, each cost 0ms and the repeat count after
+    # them was swallowed as an unknown token -- `ScrollDown 10` in a scrolling
+    # demo lost half a second and deferred its chapter mark.
+    "Insert",
+    "ScrollUp",
+    "ScrollDown",
 }
 MODIFIERS = ("Ctrl+", "Alt+", "Shift+", "Cmd+")
 # Statements that take one argument and cost no time.
@@ -120,7 +127,7 @@ def split_qualifier(token: str) -> tuple[str, float | None]:
     return token, None
 
 
-def is_section_comment(lines: list[str], i: int) -> str | None:
+def is_section_comment(lines: list[str], i: int) -> tuple[str, bool] | None:
     """Return the section title at line i, or None.
 
     Shape decides, because real tapes carry two kinds of comment and only the
@@ -137,7 +144,7 @@ def is_section_comment(lines: list[str], i: int) -> str | None:
 
     m = NUMBERED_RE.match(line)
     if m:
-        return None if prev_is_comment else clean_title(m.group(1))
+        return None if prev_is_comment else (clean_title(m.group(1)), True)
 
     m = COMMENT_RE.match(line)
     if not m or not m.group(1).strip():
@@ -147,7 +154,7 @@ def is_section_comment(lines: list[str], i: int) -> str | None:
     )
     if prev_is_comment or next_is_comment:
         return None
-    return clean_title(m.group(1))
+    return (clean_title(m.group(1)), False)
 
 
 def timeline(tape: str) -> tuple[list[dict], float]:
@@ -155,7 +162,7 @@ def timeline(tape: str) -> tuple[list[dict], float]:
     now = 0.0
     hidden = False
     marks: list[dict] = []
-    pending: str | None = None
+    pending: tuple[str, bool] | None = None
 
     lines = tape.splitlines()
     for i, raw in enumerate(lines):
@@ -167,9 +174,9 @@ def timeline(tape: str) -> tuple[list[dict], float]:
             # Only remember the section name; it is attributed to the next
             # visible command, so a comment inside a Hide block does not
             # become a chapter at the wrong time.
-            title = is_section_comment(lines, i)
-            if title:
-                pending = title
+            section = is_section_comment(lines, i)
+            if section:
+                pending = section
             continue
 
         tokens = TOKEN_RE.findall(line)
@@ -201,12 +208,18 @@ def timeline(tape: str) -> tuple[list[dict], float]:
         # after: the chapter starts when its first command starts. Recording it
         # at the end of the line put every chapter one statement late.
         if pending is not None:
+            title, numbered = pending
             if hidden or enters_hidden:
-                # A comment on a Hide block documents the setup; it is not a
-                # chapter, and it must not resurface at the next Show.
-                pending = None
+                # A comment on a Hide block is ambiguous: it may document the
+                # setup, or it may name a section whose first step happens to
+                # be hidden. Nothing in its shape separates them -- but a
+                # number is the author saying "this is a section", so a
+                # numbered one is held until the first visible action and an
+                # unnumbered one is treated as a note and dropped.
+                if not numbered:
+                    pending = None
             elif has_action:
-                marks.append({"title": pending, "startMs": round(now)})
+                marks.append({"title": title, "startMs": round(now)})
                 pending = None
             # Otherwise keep it: a configuration line between the comment and
             # the action it labels should not consume the mark.
@@ -243,12 +256,20 @@ def timeline(tape: str) -> tuple[list[dict], float]:
                 continue
 
             if head == "Type":
-                text = tokens[t] if t < len(tokens) else ""
-                t += 1
-                if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'`":
-                    text = text[1:-1]
+                # VHS lets one Type take several strings: `Type "ab" "cd"`.
+                typed = 0
+                while t < len(tokens) and tokens[t][:1] in "\"'`":
+                    text = tokens[t]
+                    t += 1
+                    if len(text) >= 2 and text[0] == text[-1]:
+                        text = text[1:-1]
+                    typed += len(text.replace("\\", ""))
+                if typed == 0 and t < len(tokens):
+                    # An unquoted argument; VHS allows it for a single word.
+                    typed = len(tokens[t])
+                    t += 1
                 if not hidden:
-                    now += len(text) * (
+                    now += typed * (
                         qualifier if qualifier is not None else typing_speed
                     )
                 continue

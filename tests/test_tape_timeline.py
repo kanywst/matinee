@@ -98,13 +98,15 @@ class TestSectionComments:
 
     def test_lone_comment_is_a_section(self) -> None:
         lines = ['Type "a"', "# Search", 'Type "b"']
-        assert is_section_comment(lines, 1) == "Search"
+        # (title, numbered) -- numbering is what lets a section survive a
+        # hidden first step, so it travels with the title.
+        assert is_section_comment(lines, 1) == ("Search", False)
 
     # Regression: requiring no '.' and <40 chars rejected every section comment
     # in prpr's tape and half of brtc's.
     def test_a_lone_comment_with_a_period_is_still_a_section(self) -> None:
         lines = ['Type "a"', "# Walk the list.", 'Type "b"']
-        assert is_section_comment(lines, 1) == "Walk the list"
+        assert is_section_comment(lines, 1) == ("Walk the list", False)
 
     def test_multi_line_comment_block_is_prose(self) -> None:
         lines = [
@@ -326,3 +328,48 @@ class TestWhatCountsAsASection:
         tape = "Set TypingSpeed 0\nSleep 1s\n# Second\nSet Padding 10\nSleep 1s\n"
         marks, _ = timeline(tape)
         assert marks == [{"title": "Second", "startMs": 1000}]
+
+
+class TestHiddenSections:
+    """A comment on a Hide block is ambiguous, and numbering is the tiebreak.
+
+    Nothing in the shape separates "this documents the setup" from "this names
+    a section whose first step happens to be hidden" -- but a number is the
+    author saying it is a section.
+    """
+
+    def test_a_numbered_section_survives_a_hidden_first_step(self) -> None:
+        tape = (
+            '# Launch\nType "app"\nSleep 2s\n'
+            '# 3. Export\nHide\nType "rm -f out.pem"\nEnter\nShow\n'
+            'Type "e"\nSleep 2s\n'
+        )
+        assert titles(tape) == ["Launch", "Export"]
+
+    def test_an_unnumbered_note_on_a_hide_block_is_dropped(self) -> None:
+        tape = (
+            '# Set up the fixtures\nHide\nType "x"\nShow\n'
+            'Type "app"\nSleep 3s\n# Search\nSleep 1s\n'
+        )
+        assert titles(tape) == ["Search"]
+
+
+class TestVHSConstructs:
+    """Constructs `vhs validate` accepts that the walker used to price at 0ms."""
+
+    @pytest.mark.parametrize("key", ["Insert", "ScrollUp", "ScrollDown"])
+    def test_the_remaining_keys_cost_time(self, key: str) -> None:
+        assert elapsed(f"Set TypingSpeed 50ms\n{key}\n") == 50.0
+
+    def test_a_repeat_count_after_a_scroll_key(self) -> None:
+        assert elapsed("Set TypingSpeed 50ms\nScrollDown 10\nSleep 2s\n") == 2500.0
+
+    def test_type_accepts_several_strings(self) -> None:
+        assert elapsed('Set TypingSpeed 100ms\nType "abc" "de"\n') == 500.0
+
+    def test_an_escaped_quote_stays_inside_one_token(self) -> None:
+        # `say "hi"` is eight characters once the escapes are removed.
+        assert elapsed('Set TypingSpeed 100ms\nType "say \\"hi\\""\n') == 800.0
+
+    def test_a_hash_inside_a_string_is_not_a_comment(self) -> None:
+        assert elapsed('Set TypingSpeed 100ms\nType "#!/bin/sh"\n') == 900.0

@@ -80,7 +80,36 @@ def main() -> None:
     parser.add_argument("script", type=Path)
     args = parser.parse_args()
 
-    script = yaml.safe_load(args.script.read_text(encoding="utf-8"))
+    try:
+        script = yaml.safe_load(args.script.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        sys.exit(f"error: {args.script} is not valid YAML:\n  {exc}")
+    if not isinstance(script, dict):
+        sys.exit(f"error: {args.script} should be a mapping of keys to values")
+
+    # Named up front rather than left to a KeyError three functions deep. A
+    # chapter title that contains a '#' or a ':' also has to be quoted in YAML,
+    # which is the other way this file goes wrong.
+    missing = [
+        key
+        for key in ("id", "title", "subtitle", "repo", "accent", "source")
+        if key not in script
+    ]
+    if missing:
+        sys.exit(
+            f"error: {args.script} is missing {', '.join(missing)}.\n"
+            "  Required: id, title, subtitle, repo, accent, source.\n"
+            "  See projects/hello/script.yaml for the smallest complete example."
+        )
+    source_missing = [
+        key for key in ("repoDir", "tapeRel") if key not in (script["source"] or {})
+    ]
+    if source_missing:
+        sys.exit(
+            f"error: {args.script}'s `source` is missing "
+            f"{', '.join(source_missing)}; both repoDir and tapeRel are required"
+        )
+
     project_id = script["id"]
 
     pipeline_dir = Path(__file__).resolve().parent.parent

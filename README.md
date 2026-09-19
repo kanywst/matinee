@@ -141,6 +141,8 @@ Chapters come from section comments:
 
 If your tape assumes a built binary, build it first. matinee runs the tape verbatim and builds nothing for you.
 
+Two things the chapter walker does not follow: a tape that pulls its steps in with `Source other.tape` is read as written, so the sections in the included file are not found, and the timing estimate for it will be short. Keep the sections in the tape you point `tapeRel` at.
+
 ## How it works
 
 ```text
