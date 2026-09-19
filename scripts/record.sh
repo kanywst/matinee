@@ -48,10 +48,17 @@ TAPE_PATH="$REPO_DIR/$TAPE_REL"
 [ -f "$TAPE_PATH" ] || { echo "error: tape not found: $TAPE_PATH" >&2; exit 66; }
 command -v vhs >/dev/null || { echo "error: vhs not installed (brew install vhs)" >&2; exit 69; }
 command -v ffmpeg >/dev/null || { echo "error: ffmpeg not installed (brew install ffmpeg)" >&2; exit 69; }
+# Checked separately: some ffmpeg installs ship the encoder without the
+# probe, and this script only reaches ffprobe after a recording that takes
+# minutes. Failing here costs seconds instead.
+command -v ffprobe >/dev/null || { echo "error: ffprobe not installed (it ships with ffmpeg)" >&2; exit 69; }
 
 mkdir -p "$OUT_DIR"
 
-WORK="$(mktemp -d -t "vhs-${PROJECT_ID}")"
+# An explicit template rather than `-t`: BSD mktemp appends the random part
+# itself, GNU mktemp requires the X's and errors with "too few X's in
+# template" without them.
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/vhs-${PROJECT_ID}.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 FRAMES="$WORK/frames"
 TMP_TAPE="$WORK/recording.tape"
