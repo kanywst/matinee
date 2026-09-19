@@ -24,12 +24,16 @@ Turn a [VHS](https://github.com/charmbracelet/vhs) `.tape` into a narrated, chap
 ```bash
 git clone https://github.com/kanywst/matinee && cd matinee
 npm install
-make video PROJECT=y509
+npx remotion studio src/index.ts
 ```
 
-`out/y509-16x9.mp4` and `out/y509-9x16.mp4`.
+That opens on `hello`, the smallest complete example, and plays immediately: its tape, recording and narration are all checked in. To rebuild it from scratch — record, narrate, caption, render — install the tools below and run:
 
-Three worked examples ship in `projects/`: [y509](https://github.com/kanywst/y509), [prpr](https://github.com/kanywst/prpr) and [brtc](https://github.com/kanywst/brtc). Their tapes disagree about theme, resolution, framerate and comment style, which is deliberate — that variety is what the parser is built against.
+```bash
+make video PROJECT=hello
+```
+
+`projects/` also carries three real ones: [y509](https://github.com/kanywst/y509), [prpr](https://github.com/kanywst/prpr) and [brtc](https://github.com/kanywst/brtc). Their tapes disagree about theme, resolution, framerate and comment style, which is deliberate — that variety is what the parser is built against. Their recordings are not checked in, so building one means cloning that repo to the path its `script.yaml` names and running `make video PROJECT=<id>`.
 
 ## Install
 
@@ -52,6 +56,13 @@ Narration uses the built-in `say`. Nothing else to install.
 # vhs needs ttyd and ffmpeg; see charmbracelet/vhs for your distro
 sudo apt-get install -y ffmpeg espeak-ng
 npm install
+
+# whisper-cli, for captions. No apt package; build it or grab a release from
+# https://github.com/ggml-org/whisper.cpp
+git clone https://github.com/ggml-org/whisper.cpp && cd whisper.cpp
+cmake -B build && cmake --build build -j --config Release
+sudo install build/bin/whisper-cli /usr/local/bin/
+cd ..
 
 mkdir -p ~/.cache/whisper && cd ~/.cache/whisper
 curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
@@ -104,6 +115,14 @@ crop:
 ```
 
 Keys under `narration` and `crop` are chapter titles. A chapter you leave out plays silent, or unzoomed, which is often the right answer.
+
+Titles are the tape's comment after trimming, not the comment verbatim: the text is cut at the first `" ("` or `", "`, a trailing `.` is dropped, and anything over 48 characters is truncated at a word boundary. So `# 8. Help (auto-generated from key.Binding)` becomes `Help`. Rather than working it out, ask:
+
+```bash
+uv run scripts/tape_timeline.py path/to/demo.tape
+```
+
+That prints the exact titles to use as keys. `build_project.py` also warns when a key matches no chapter.
 
 **2.** Add two lines to `projects/registry.ts` — an import and an array entry.
 

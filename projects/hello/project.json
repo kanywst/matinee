@@ -1,0 +1,122 @@
+{
+  "id": "hello",
+  "title": "hello",
+  "subtitle": "The smallest complete example — a tape, two chapters, and a narrated video out the other end.",
+  "repo": "github.com/kanywst/matinee",
+  "accent": "#a6e3a1",
+  "terminalDurationMs": 7000,
+  "terminalWidth": 832,
+  "terminalHeight": 336,
+  "chapters": [
+    {
+      "title": "Say hello",
+      "startMs": 0,
+      "narration": "Chapters come from the comments in your tape."
+    },
+    {
+      "title": "Say goodbye",
+      "startMs": 2729,
+      "narration": "Narration comes from this file, and the captions from the audio."
+    }
+  ],
+  "terminalSrc": "projects/hello/terminal.mp4",
+  "captions": [
+    {
+      "text": "chapters",
+      "startMs": 10,
+      "endMs": 400
+    },
+    {
+      "text": "come",
+      "startMs": 400,
+      "endMs": 600
+    },
+    {
+      "text": "from",
+      "startMs": 600,
+      "endMs": 800
+    },
+    {
+      "text": "the",
+      "startMs": 800,
+      "endMs": 950
+    },
+    {
+      "text": "comments",
+      "startMs": 950,
+      "endMs": 1350
+    },
+    {
+      "text": "and",
+      "startMs": 1350,
+      "endMs": 1500
+    },
+    {
+      "text": "your",
+      "startMs": 1500,
+      "endMs": 1730
+    },
+    {
+      "text": "tape.",
+      "startMs": 1730,
+      "endMs": 2800
+    },
+    {
+      "text": "Narration",
+      "startMs": 2800,
+      "endMs": 3440
+    },
+    {
+      "text": "comes",
+      "startMs": 3440,
+      "endMs": 3880
+    },
+    {
+      "text": "from",
+      "startMs": 3880,
+      "endMs": 4080
+    },
+    {
+      "text": "this",
+      "startMs": 4080,
+      "endMs": 4360
+    },
+    {
+      "text": "file,",
+      "startMs": 4360,
+      "endMs": 4720
+    },
+    {
+      "text": "and",
+      "startMs": 4720,
+      "endMs": 4890
+    },
+    {
+      "text": "the",
+      "startMs": 4890,
+      "endMs": 5290
+    },
+    {
+      "text": "captions",
+      "startMs": 5290,
+      "endMs": 5530
+    },
+    {
+      "text": "from",
+      "startMs": 5530,
+      "endMs": 5750
+    },
+    {
+      "text": "the",
+      "startMs": 5750,
+      "endMs": 5920
+    },
+    {
+      "text": "audio.",
+      "startMs": 5920,
+      "endMs": 6240
+    }
+  ],
+  "captionsForDurationMs": 7000,
+  "audioSrc": "projects/hello/narration.wav"
+}

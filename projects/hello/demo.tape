@@ -23,4 +23,6 @@ Sleep 1500ms
 Type "echo goodbye"
 Sleep 300ms
 Enter
-Sleep 1500ms
+# Long enough for the second chapter's narration to finish inside its own
+# slot; tts.py warns when a line overruns, and an example should not.
+Sleep 3500ms

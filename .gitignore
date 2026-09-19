@@ -10,5 +10,9 @@ out/
 public/projects/*/broll.mp4
 public/projects/*/narration.wav
 public/projects/*/terminal.mp4
-smoke-props.json
-tests/fixtures/smoke/project.json
+hello-props.json
+
+# The hello example is the exception: its recording and narration are ~700KB
+# together, and checking them in is what lets a bare clone render something.
+!public/projects/hello/terminal.mp4
+!public/projects/hello/narration.wav

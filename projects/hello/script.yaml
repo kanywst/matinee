@@ -1,0 +1,25 @@
+# The example that works from a bare clone.
+#
+# `repoDir: .` points at matinee itself and the tape only echoes, so there is
+# no other repo to clone and no tool to build. Its recording and narration are
+# checked in (they total about half a megabyte), which means `make studio` and
+# a render both work immediately after `npm install`.
+#
+# CI records this same project from scratch on every run, so it doubles as the
+# end-to-end test.
+
+id: hello
+title: hello
+subtitle: The smallest complete example — a tape, two chapters, and a narrated video out the other end.
+repo: github.com/kanywst/matinee
+accent: "#a6e3a1"
+
+lang: en
+
+source:
+  repoDir: .
+  tapeRel: projects/hello/demo.tape
+
+narration:
+  Say hello: Chapters come from the comments in your tape.
+  Say goodbye: Narration comes from this file, and the captions from the audio.

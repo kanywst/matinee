@@ -109,42 +109,41 @@ jobs:
         run: brew install espeak-ng
 
       - name: Record
-        run: ./scripts/record.sh smoke . tests/fixtures/smoke/demo.tape 1
+        run: ./scripts/record.sh hello . projects/hello/demo.tape 1
       - name: Build project
-        run: uv run --with pyyaml scripts/build_project.py tests/fixtures/smoke/script.yaml
+        run: uv run --with pyyaml scripts/build_project.py projects/hello/script.yaml
       - name: Narrate
         run: |
           uv run --with pyyaml scripts/tts.py \
-            tests/fixtures/smoke/script.yaml --backend espeak
+            projects/hello/script.yaml --backend espeak
           uv run --with pyyaml scripts/build_project.py \
-            tests/fixtures/smoke/script.yaml
+            projects/hello/script.yaml
       # --props replaces the whole props object, so the project has to be
-      # wrapped the way defaultProps shapes it. Rendering through an existing
-      # composition keeps the smoke fixture out of projects/registry.ts;
-      # calculateMetadata takes the duration from these props, so the output is
-      # the length of the smoke recording and not of y509's.
+      # wrapped the way defaultProps shapes it. Passing props rather than
+      # relying on the checked-in project.json is what makes this a test of the
+      # recording the job just made, rather than of the one in git.
       - name: Render
         run: |
           python3 -c "import json,pathlib; \
-            p=json.loads(pathlib.Path('tests/fixtures/smoke/project.json').read_text()); \
-            pathlib.Path('smoke-props.json').write_text( \
+            p=json.loads(pathlib.Path('projects/hello/project.json').read_text()); \
+            pathlib.Path('hello-props.json').write_text( \
               json.dumps({'project': p, 'vertical': False}))"
-          npx remotion render src/index.ts y509-16x9 out/smoke.mp4 \
-            --props=smoke-props.json
+          npx remotion render src/index.ts hello-16x9 out/hello.mp4 \
+            --props=hello-props.json
 
       - name: Assert the output is a real video with sound
         run: |
           set -euo pipefail
-          test -s out/smoke.mp4
+          test -s out/hello.mp4
 
           duration=$(ffprobe -v error -show_entries format=duration \
-            -of csv=p=0 out/smoke.mp4)
+            -of csv=p=0 out/hello.mp4)
           echo "duration: ${duration}s"
           awk -v d="$duration" 'BEGIN { exit (d > 1) ? 0 : 1 }' \
             || { echo "::error::output is shorter than a second"; exit 1; }
 
           streams=$(ffprobe -v error -show_entries stream=codec_type \
-            -of csv=p=0 out/smoke.mp4 | sort -u | tr '\n' ' ')
+            -of csv=p=0 out/hello.mp4 | sort -u | tr '\n' ' ')
           echo "streams: ${streams}"
           case "$streams" in
             *audio*) ;;
@@ -155,7 +154,7 @@ jobs:
             *) echo "::error::no video stream"; exit 1 ;;
           esac
 
-          chapters=$(python3 -c "import json;print(len(json.load(open('tests/fixtures/smoke/project.json'))['chapters']))")
+          chapters=$(python3 -c "import json;print(len(json.load(open('projects/hello/project.json'))['chapters']))")
           echo "chapters: ${chapters}"
           test "$chapters" -eq 2
 

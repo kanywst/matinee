@@ -34,8 +34,8 @@ Cost control, in order of how much they save:
      before it costs it.
 
 Pricing moves monthly; check fal.ai/pricing rather than trusting a number
-written down here. See docs/01-landscape.md for the model landscape and
-docs/05-policy-money.md before putting any of this somewhere public.
+written down here. Whatever you generate, check the model's terms before
+publishing the result.
 """
 
 from __future__ import annotations

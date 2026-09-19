@@ -1,4 +1,5 @@
 import type { Project } from "../src/types";
+import hello from "./hello/project.json";
 import y509 from "./y509/project.json";
 import prpr from "./prpr/project.json";
 import brtc from "./brtc/project.json";
@@ -12,6 +13,9 @@ import brtc from "./brtc/project.json";
  * edited.
  */
 export const projects: Project[] = [
+  // First, so it is what `remotion studio` opens on: it is the only example
+  // whose recording is checked in, so it works from a bare clone.
+  hello as Project,
   y509 as Project,
   prpr as Project,
   brtc as Project,

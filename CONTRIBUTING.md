@@ -30,7 +30,13 @@ shellcheck scripts/*.sh                       # shell
 npx --yes markdownlint-cli2 "**/*.md" "#node_modules"
 ```
 
-There is no end-to-end test in CI: it would need `vhs`, `ttyd`, a terminal, and a tape that builds the tool it is demoing. CI checks that every checked-in `project.json` still resolves into the compositions Remotion expects, and the rest is covered by unit tests over the parts that have actually broken.
+CI also runs an end-to-end job on Linux and macOS: it records `projects/hello`, narrates it with `espeak`, renders it, and asserts with `ffprobe` that the result has both a video and an audio stream. That one is worth more than the unit tests — it is the only check that proves the whole pipeline still works. To run it locally:
+
+```bash
+make video PROJECT=hello
+```
+
+The unit tests cover the parts that have actually broken: the tape walker, the crop maths, and caption grouping.
 
 ## Conventions
 
