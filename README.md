@@ -110,6 +110,9 @@ narration:
   Search: Search jumps straight to a certificate.
 
 # Optional, 9:16 only: zoom to the part of the screen each chapter is about.
+# Fractions of the recording. The shorter side wins: the region is centred on
+# the rectangle you give and covers the card, so a crop much wider than it is
+# tall will not show all of its width.
 crop:
   Search: { x: 0.14, y: 0.24, w: 0.72, h: 0.46 }
 ```

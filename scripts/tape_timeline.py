@@ -123,19 +123,25 @@ def split_qualifier(token: str) -> tuple[str, float | None]:
 def is_section_comment(lines: list[str], i: int) -> str | None:
     """Return the section title at line i, or None.
 
-    A numbered comment always counts. An unnumbered one counts only when it is
-    a comment block of exactly one line -- that shape is what separates a
-    marker from a paragraph of prose.
+    Shape decides, because real tapes carry two kinds of comment and only the
+    punctuation distinguishes them unreliably:
+
+    * A numbered comment is a section when it *begins* its comment block. It
+      may run onto further lines -- section titles do. One buried inside a
+      paragraph is an enumeration ("# 1. builds / # 2. runs it"), not a
+      section.
+    * An unnumbered comment is a section only when its block is one line long.
     """
     line = lines[i].strip()
+    prev_is_comment = i > 0 and COMMENT_RE.match(lines[i - 1].strip()) is not None
+
     m = NUMBERED_RE.match(line)
     if m:
-        return clean_title(m.group(1))
+        return None if prev_is_comment else clean_title(m.group(1))
 
     m = COMMENT_RE.match(line)
     if not m or not m.group(1).strip():
         return None
-    prev_is_comment = i > 0 and COMMENT_RE.match(lines[i - 1].strip()) is not None
     next_is_comment = (
         i + 1 < len(lines) and COMMENT_RE.match(lines[i + 1].strip()) is not None
     )
@@ -166,19 +172,45 @@ def timeline(tape: str) -> tuple[list[dict], float]:
                 pending = title
             continue
 
+        tokens = TOKEN_RE.findall(line)
+        # A trailing comment is not a statement. VHS accepts `Set Width 1200 #
+        # the width`, and walking its words as commands let a comment that
+        # merely mentions a duration -- `Type "ab"  # Sleep 10s here` -- add
+        # ten seconds to the estimate. That is not a local error: scale_marks
+        # divides the measured length by the estimate, so one such comment
+        # moves every chapter mark in the video.
+        for index, token in enumerate(tokens):
+            if token.startswith("#"):
+                tokens = tokens[:index]
+                break
+        if not tokens:
+            continue
+
+        heads = [split_qualifier(token)[0] for token in tokens]
+        # Only a statement that occupies the timeline starts a chapter. A
+        # comment above `Set`/`Output` is the tape's own header, and one above
+        # `Hide` labels the setup -- neither is a chapter, and pinning them
+        # here put a 1-frame chapter at 0ms and renumbered every chip.
+        enters_hidden = "Hide" in heads
+        has_action = any(
+            head in {"Type", "Sleep"} or head in KEYS or head.startswith(MODIFIERS)
+            for head in heads
+        )
+
         # Place the pending section *before* the statement it labels runs, not
         # after: the chapter starts when its first command starts. Recording it
         # at the end of the line put every chapter one statement late.
         if pending is not None:
-            if hidden:
-                # A comment inside a Hide block documents the setup; it is not
-                # a chapter, and it must not resurface at the next Show.
+            if hidden or enters_hidden:
+                # A comment on a Hide block documents the setup; it is not a
+                # chapter, and it must not resurface at the next Show.
                 pending = None
-            else:
+            elif has_action:
                 marks.append({"title": pending, "startMs": round(now)})
                 pending = None
+            # Otherwise keep it: a configuration line between the comment and
+            # the action it labels should not consume the mark.
 
-        tokens = TOKEN_RE.findall(line)
         t = 0
         while t < len(tokens):
             head, qualifier = split_qualifier(tokens[t])

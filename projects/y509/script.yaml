@@ -23,6 +23,9 @@ source:
 # A two-pane TUI fitted whole into a phone frame is legible only just, so each
 # chapter shows the pane it is actually about. Chapters left out here show the
 # whole frame. Ignored in 16:9.
+#
+# The region is centred on the rectangle and covers the card, so the shorter
+# side wins: a crop much wider than it is tall will not show all of its width.
 crop:
   Navigate certificate list: { x: 0.0, y: 0.0, w: 0.52, h: 0.62 }
   Switch to details pane and browse tabs: { x: 0.50, y: 0.0, w: 0.50, h: 0.60 }

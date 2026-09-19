@@ -271,3 +271,58 @@ class TestRealTapes:
         assert len(marks) == 9
         assert marks[0]["startMs"] == 0
         assert all(m["startMs"] < 27880 for m in marks)
+
+
+class TestTrailingComments:
+    """A trailing `# ...` is not a statement.
+
+    VHS accepts `Set Width 1200 # the width`, and walking a comment's words as
+    commands let one that merely mentioned a duration inflate the estimate --
+    which scale_marks then divides by, moving every chapter mark in the video.
+    """
+
+    def test_a_duration_in_a_comment_costs_nothing(self) -> None:
+        assert elapsed('Set TypingSpeed 100ms\nType "ab"  # Sleep 10s here\n') == 200.0
+
+    def test_a_comment_after_a_key_costs_nothing(self) -> None:
+        assert elapsed("Set TypingSpeed 50ms\nEnter # then Sleep 5s\n") == 50.0
+
+    def test_a_comment_after_a_sleep_costs_nothing(self) -> None:
+        assert elapsed("Sleep 2s # then press Enter twice\n") == 2000.0
+
+    def test_a_hash_inside_a_quoted_string_is_not_a_comment(self) -> None:
+        assert elapsed('Set TypingSpeed 100ms\nType "#127"\n') == 400.0
+
+
+class TestWhatCountsAsASection:
+    def test_a_header_comment_does_not_become_a_chapter(self) -> None:
+        tape = '# y509 demo tape\nSet FontSize 16\n# Launch\nType "a"\nSleep 1s\n'
+        assert titles(tape) == ["Launch"]
+
+    def test_a_comment_above_hide_labels_the_setup_not_a_chapter(self) -> None:
+        tape = (
+            '# Set up the fixtures\nHide\nType "x"\nShow\n'
+            'Type "app"\nSleep 3s\n# Search\nSleep 1s\n'
+        )
+        assert titles(tape) == ["Search"]
+
+    def test_an_enumeration_inside_prose_is_not_a_section(self) -> None:
+        tape = (
+            '# This tape:\n# 1. builds\n# 2. runs it\n# 3. quits\nType "a"\nSleep 1s\n'
+        )
+        assert titles(tape) == []
+
+    def test_a_numbered_section_may_run_onto_a_second_line(self) -> None:
+        # y509's tape does exactly this, and the continuation must not become
+        # a second chapter.
+        tape = (
+            "# 2. Switch to details pane and browse tabs (last tab is Misc\n"
+            "# with the new chain view)\n"
+            'Type "a"\nSleep 1s\n'
+        )
+        assert titles(tape) == ["Switch to details pane and browse tabs"]
+
+    def test_a_configuration_line_does_not_consume_the_mark(self) -> None:
+        tape = "Set TypingSpeed 0\nSleep 1s\n# Second\nSet Padding 10\nSleep 1s\n"
+        marks, _ = timeline(tape)
+        assert marks == [{"title": "Second", "startMs": 1000}]
