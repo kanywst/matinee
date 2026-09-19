@@ -1,5 +1,13 @@
 <img src="docs/demo.gif" alt="matinee turning the y509 VHS tape into a chaptered demo video" width="760">
 
+With sound, on github.com. The GIF above is what every other site shows:
+
+<!-- The bare URL is load-bearing: GitHub turns a user-attachments link alone
+     on its own line into a video player, and wrapping it in link or image
+     syntax turns it back into a plain link. Verified by rendering. -->
+<!-- markdownlint-disable-next-line MD034 -->
+https://github.com/user-attachments/assets/a5e3764a-c2af-4185-9358-72b9c32003a2
+
 [![CI](https://github.com/kanywst/matinee/actions/workflows/ci.yml/badge.svg)](https://github.com/kanywst/matinee/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -8,8 +16,6 @@
 Turn a [VHS](https://github.com/charmbracelet/vhs) `.tape` into a narrated, chaptered demo video.
 
 [Quick start](#quick-start) · [Adding your repo](#adding-your-repo) · [How it works](#how-it-works) · [Limitations](#limitations)
-
-> The GIF above is silent, because GIFs are. The real output has a voice track, word-synced captions and per-chapter framing — which is the whole point, and the one thing a GIF cannot show you.
 
 ## What it does
 
