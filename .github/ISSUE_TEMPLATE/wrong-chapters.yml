@@ -1,0 +1,41 @@
+name: matinee got my chapters wrong
+description: The chapter list or timings do not match the tape
+labels: [parser]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful report there is. Every bug the tape walker has
+        had came from a real tape doing something reasonable it did not expect
+        — several statements on one line, section comments ending in a period,
+        `@`-qualified commands — and none of them would have been found
+        without someone's actual tape.
+
+  - type: textarea
+    id: tape
+    attributes:
+      label: The tape
+      description: >-
+        Paste it, or the smallest part that still gets it wrong. This is the
+        only field that really matters.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what you got
+      description: >-
+        `uv run scripts/tape_timeline.py path/to/demo.tape` prints the sections
+        matinee found. Paste that alongside the chapters you meant.
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: vhs and ffmpeg versions
+      description: "`vhs --version` and `ffmpeg -version | head -1`"
+    validations:
+      required: false

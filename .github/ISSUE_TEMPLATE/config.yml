@@ -1,0 +1,4 @@
+# Blank issues stay on. There is one template, for the one report that is
+# reliably hard to reproduce without the reporter's file; everything else is
+# better as prose than as a form.
+blank_issues_enabled: true

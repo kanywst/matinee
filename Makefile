@@ -1,6 +1,6 @@
 # Demo video pipeline.
 #
-#   make video PROJECT=y509        # everything, in order
+#   make video PROJECT=hello       # everything, in order
 #   make studio                    # interactive preview
 #
 # Each step writes a file the next one reads, so they can be run individually

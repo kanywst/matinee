@@ -42,7 +42,11 @@ import yaml
 MODEL_DIR = Path.home() / ".cache" / "whisper"
 # Punctuation whisper attaches to a word. A fix matches the bare word, so this
 # is stripped for the lookup and restored on both sides afterwards.
-PUNCTUATION = ".,!?;:\"'()[]"
+#
+# The Japanese marks are not decoration: `lang` defaults to ja, and without
+# them a fix silently missed every word whisper ended with 。 or 、. This is
+# the same set src/captions.ts uses for its sentence-break rule.
+PUNCTUATION = ".,!?;:\"'()[]" + "。、！？「」『』（）：；"  # noqa: RUF001
 
 
 def correct(word: str, fixes: dict[str, str], used: set[str]) -> str:

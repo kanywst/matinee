@@ -50,6 +50,13 @@ class TestCorrect:
     def test_punctuation_only_is_left_alone(self) -> None:
         assert correct_with({"PAM": "PEM"}, "...") == "..."
 
+    # Regression: the punctuation set was ASCII-only while `lang` defaults to
+    # ja, so a Japanese fix silently missed any word whisper ended with 。or 、.
+    def test_handles_japanese_punctuation(self) -> None:
+        assert correct_with({"ゼロ": "零"}, "ゼロ。") == "零。"
+        assert correct_with({"なので": "ので"}, "なので、") == "ので、"
+        assert correct_with({"PAM": "PEM"}, "「PAM」") == "「PEM」"
+
     def test_reports_which_fixes_were_used(self) -> None:
         used: set[str] = set()
         correct("PAM.", {"PAM": "PEM", "sans": "SANs"}, used)
