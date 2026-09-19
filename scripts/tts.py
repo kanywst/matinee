@@ -54,7 +54,19 @@ PIPER_MODEL = Path.home() / ".cache" / "piper" / "en_US-lessac-medium.onnx"
 
 
 def run(cmd: list[str]) -> None:
-    subprocess.run(cmd, check=True, capture_output=True)
+    """Run a command, and put its stderr in the error if it fails.
+
+    Every backend shells out to ffmpeg, so swallowing the captured stderr
+    turned a bad filter graph or a missing voice into a bare
+    `CalledProcessError: returned non-zero exit status 1`.
+    """
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode != 0:
+        sys.exit(
+            f"error: {cmd[0]} failed ({result.returncode})\n"
+            f"  {' '.join(cmd)}\n"
+            + (result.stderr.decode(errors="replace").strip() or "(no output)")
+        )
 
 
 def probe_duration_ms(path: Path) -> int:
@@ -221,6 +233,10 @@ def main() -> None:
         help="path to a piper .onnx voice",
     )
     args = parser.parse_args()
+
+    for tool in ("ffmpeg", "ffprobe"):
+        if not shutil.which(tool):
+            sys.exit(f"error: {tool} not installed (brew install ffmpeg)")
 
     script = yaml.safe_load(args.script.read_text(encoding="utf-8"))
     lang = script.get("lang", "ja")

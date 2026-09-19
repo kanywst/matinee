@@ -87,6 +87,8 @@ Set `lang: ja` in your `script.yaml`. Captions need the multilingual whisper mod
 
 **Each VOICEVOX character has its own terms of use.** Check the one you pick before publishing anything.
 
+Rendering needs a CJK font installed, or the captions come out as tofu. macOS has one; on Linux install Noto CJK (`apt-get install fonts-noto-cjk`).
+
 Python runs through [uv](https://docs.astral.sh/uv/) — each script declares its own dependencies inline, so there is no environment to create.
 
 ## Adding your repo

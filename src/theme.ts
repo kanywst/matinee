@@ -19,8 +19,16 @@ export const theme = {
   red: "#f38ba8",
 } as const;
 
+/*
+ * Both stacks name a CJK fallback explicitly and list a Linux one beside the
+ * macOS one: a `lang: ja` project rendered on a machine without Hiragino
+ * comes out as tofu, and that path is documented while CI only renders
+ * English. Install a Noto CJK font if your narration is not Latin.
+ */
 export const font =
-  '"SF Mono", "JetBrains Mono", "Menlo", ui-monospace, monospace';
+  '"SF Mono", "JetBrains Mono", "DejaVu Sans Mono", Menlo, ' +
+  '"Noto Sans Mono CJK JP", ui-monospace, monospace';
 
 export const sans =
-  '-apple-system, "SF Pro Text", "Helvetica Neue", "Hiragino Sans", sans-serif';
+  '-apple-system, "SF Pro Text", "Helvetica Neue", "Noto Sans", ' +
+  '"Hiragino Sans", "Noto Sans CJK JP", sans-serif';

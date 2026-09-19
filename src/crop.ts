@@ -19,8 +19,6 @@ export const FULL_FRAME: Crop = { x: 0, y: 0, w: 1, h: 1 };
 /** How long the move between two chapters' crops takes, in ms. */
 export const CROP_TWEEN_MS = 400;
 
-export const isFullFrame = (crop: Crop): boolean =>
-  crop.x === 0 && crop.y === 0 && crop.w === 1 && crop.h === 1;
 
 /**
  * Clamp a crop into the frame and reject degenerate rectangles.

@@ -4,7 +4,6 @@ import {
   cropAt,
   cropTransform,
   FULL_FRAME,
-  isFullFrame,
   lerpCrop,
   normaliseCrop,
   visibleRect,
@@ -62,13 +61,6 @@ describe("normaliseCrop", () => {
       expect(out.x + out.w).toBeLessThanOrEqual(1 + 1e-9);
       expect(out.y + out.h).toBeLessThanOrEqual(1 + 1e-9);
     }
-  });
-});
-
-describe("isFullFrame", () => {
-  it("recognises the whole frame", () => {
-    expect(isFullFrame(FULL_FRAME)).toBe(true);
-    expect(isFullFrame({ x: 0, y: 0, w: 1, h: 0.5 })).toBe(false);
   });
 });
 

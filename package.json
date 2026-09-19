@@ -17,7 +17,6 @@
   ],
   "type": "commonjs",
   "dependencies": {
-    "@remotion/captions": "^4.0.526",
     "@remotion/cli": "^4.0.526",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

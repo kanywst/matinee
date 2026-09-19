@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -79,6 +80,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("script", type=Path)
     args = parser.parse_args()
+
+    if not shutil.which("ffprobe"):
+        sys.exit("error: ffprobe not installed (it ships with ffmpeg)")
 
     try:
         script = yaml.safe_load(args.script.read_text(encoding="utf-8"))
@@ -181,7 +185,14 @@ def main() -> None:
         # Only carried when set: an absent crop means the whole frame, which is
         # also what every chapter gets in 16:9.
         if m["title"] in crops:
-            chapter["crop"] = {k: float(crops[m["title"]][k]) for k in "xywh"}
+            try:
+                chapter["crop"] = {k: float(crops[m["title"]][k]) for k in "xywh"}
+            except (TypeError, ValueError):
+                sys.exit(
+                    f"error: crop for '{m['title']}' has a non-numeric value: "
+                    f"{crops[m['title']]}\n"
+                    "  x, y, w and h are fractions of the recording, 0 to 1."
+                )
         chapters.append(chapter)
 
     out_path = args.script.parent / "project.json"
