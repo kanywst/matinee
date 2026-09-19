@@ -11,7 +11,7 @@
     {
       "title": "Say hello",
       "startMs": 0,
-      "narration": "Chapters come from the comments in your tape."
+      "narration": "Chapters come from your tape's own comments."
     },
     {
       "title": "Say goodbye",
@@ -22,68 +22,63 @@
   "terminalSrc": "projects/hello/terminal.mp4",
   "captions": [
     {
-      "text": "chapters",
-      "startMs": 10,
-      "endMs": 400
+      "text": "Chapters",
+      "startMs": 20,
+      "endMs": 580
     },
     {
       "text": "come",
-      "startMs": 400,
-      "endMs": 600
+      "startMs": 580,
+      "endMs": 870
     },
     {
       "text": "from",
-      "startMs": 600,
-      "endMs": 800
-    },
-    {
-      "text": "the",
-      "startMs": 800,
-      "endMs": 950
-    },
-    {
-      "text": "comments",
-      "startMs": 950,
-      "endMs": 1350
-    },
-    {
-      "text": "and",
-      "startMs": 1350,
-      "endMs": 1500
+      "startMs": 870,
+      "endMs": 1160
     },
     {
       "text": "your",
-      "startMs": 1500,
-      "endMs": 1730
+      "startMs": 1160,
+      "endMs": 1450
     },
     {
-      "text": "tape.",
-      "startMs": 1730,
-      "endMs": 2800
+      "text": "tape's",
+      "startMs": 1450,
+      "endMs": 1880
+    },
+    {
+      "text": "own",
+      "startMs": 1880,
+      "endMs": 2120
+    },
+    {
+      "text": "comments.",
+      "startMs": 2120,
+      "endMs": 2880
     },
     {
       "text": "Narration",
-      "startMs": 2800,
-      "endMs": 3440
+      "startMs": 2880,
+      "endMs": 3460
     },
     {
       "text": "comes",
-      "startMs": 3440,
-      "endMs": 3880
+      "startMs": 3460,
+      "endMs": 3780
     },
     {
       "text": "from",
-      "startMs": 3880,
-      "endMs": 4080
+      "startMs": 3780,
+      "endMs": 4040
     },
     {
       "text": "this",
-      "startMs": 4080,
-      "endMs": 4360
+      "startMs": 4040,
+      "endMs": 4300
     },
     {
       "text": "file,",
-      "startMs": 4360,
+      "startMs": 4300,
       "endMs": 4720
     },
     {
@@ -94,16 +89,16 @@
     {
       "text": "the",
       "startMs": 4890,
-      "endMs": 5290
+      "endMs": 5040
     },
     {
       "text": "captions",
-      "startMs": 5290,
-      "endMs": 5530
+      "startMs": 5040,
+      "endMs": 5610
     },
     {
       "text": "from",
-      "startMs": 5530,
+      "startMs": 5610,
       "endMs": 5750
     },
     {

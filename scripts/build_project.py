@@ -107,12 +107,24 @@ def main() -> None:
     # trailing-section filter would empty the list is handled once.
     all_titles = {m["title"] for m in marks}
     marks = scale_marks(marks, estimated, duration_ms)
+    kept_titles = {m["title"] for m in marks}
 
     narration = script.get("narration", {}) or {}
     crops = script.get("crop", {}) or {}
     # Checked against every section the tape has, not only the ones that
     # survived the trailing-section filter -- otherwise narration written for
     # a trimmed final section is misreported as a typo.
+    # A section dropped as a teardown still counts as a real section above, so
+    # a key naming it is not a typo -- but it will never be spoken either, and
+    # that is worth saying out loud.
+    trimmed = ((set(narration) | set(crops)) & all_titles) - kept_titles
+    if trimmed:
+        print(
+            "warning: these sections were trimmed as teardown and will not be "
+            "used: " + ", ".join(sorted(trimmed)),
+            file=sys.stderr,
+        )
+
     unused = (set(narration) | set(crops)) - all_titles
     if unused:
         # Almost always a typo or a renamed tape section, and it fails quietly

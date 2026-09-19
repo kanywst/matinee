@@ -17,7 +17,7 @@ Turn a [VHS](https://github.com/charmbracelet/vhs) `.tape` into a narrated, chap
 - **Chapters come from your tape's comments.** `# Search` above a step becomes a chapter. You never write a timestamp.
 - **Narration is yours, timing is derived.** You write one line per chapter; it gets spoken, laid down at that chapter's start, and captioned word-by-word from the audio that was actually produced.
 - **16:9 and 9:16 from one source.** The vertical cut can zoom to whichever pane each chapter is about, so a dense TUI stays readable on a phone.
-- **Local and free.** No API key. Recording, narration, captions and rendering all run on your machine.
+- **Local and free.** No API key. Recording, narration, captions and rendering all run on your machine. The one exception is opt-in and off by default: `make broll` can generate an abstract clip for the title card through a paid API, and nothing else needs it.
 
 ## Quick start
 
@@ -125,7 +125,7 @@ Titles are the tape's comment after trimming, not the comment verbatim: the text
 uv run scripts/tape_timeline.py path/to/demo.tape
 ```
 
-That prints the exact titles to use as keys. `build_project.py` also warns when a key matches no chapter.
+That prints the tape's sections. A section starting in the last second of the recording is dropped as a teardown, so the list can be one longer than the chapters you end up with — `build_project.py` warns about both a key that matches nothing and a key whose section was trimmed.
 
 **2.** Add two lines to `projects/registry.ts` — an import and an array entry.
 
@@ -157,7 +157,15 @@ Each step is a `make` target, so you can rerun just the one you changed. `make s
 
 **The tape is the source of truth.** Chapter titles and timings are derived from it, which means editing the demo moves the chapters with it. Narration does not follow automatically — a renamed section drops its line with a warning.
 
-**Captions transcribe the audio, not the script.** That gets the real timings, including the pauses the voice chose. The cost is that a word the TTS slurs comes back misspelled; read them before publishing.
+**Captions transcribe the audio, not the script.** That gets the real timings, including the pauses the voice chose. The cost is that a word the voice slurs comes back misspelled — whisper heard "y509" as "Wi-5009" and "a cert" as "assert" in the example. Two remedies, in order of preference: reword the line until the transcription is right, or add the word to `captionFixes:` in `script.yaml`.
+
+```yaml
+captionFixes:
+  Wi-5009: y509
+  assert: a cert
+```
+
+Fixes apply per word, after transcription, to every occurrence — so they suit a distinctive mishearing, not a common word. `captions.py` reports which ones it applied and warns about any that never matched.
 
 **Timings are estimated, then scaled.** The tape walk models typing and sleeps but not render time, so it over-shoots; the marks are scaled to the recording's measured length.
 

@@ -99,7 +99,7 @@
   "terminalSrc": "projects/y509/terminal.mp4",
   "captions": [
     {
-      "text": "Wi-5009",
+      "text": "y509",
       "startMs": 10,
       "endMs": 970
     },
@@ -154,7 +154,7 @@
       "endMs": 8430
     },
     {
-      "text": "sans,",
+      "text": "SANs,",
       "startMs": 8430,
       "endMs": 9170
     },
@@ -179,7 +179,7 @@
       "endMs": 10740
     },
     {
-      "text": "jump",
+      "text": "jumps",
       "startMs": 10740,
       "endMs": 11090
     },
@@ -274,7 +274,7 @@
       "endMs": 19490
     },
     {
-      "text": "assert",
+      "text": "a cert",
       "startMs": 19490,
       "endMs": 20030
     },
@@ -284,7 +284,7 @@
       "endMs": 20140
     },
     {
-      "text": "PAM.",
+      "text": "PEM.",
       "startMs": 20140,
       "endMs": 20680
     },

@@ -102,9 +102,29 @@ def main() -> None:
             out_base.with_suffix(".json").read_text(encoding="utf-8")
         )["transcription"]
 
+    # Transcribing the audio buys real timings but inherits whatever the TTS
+    # sounded like, and a misheard word ends up burnt into the video. This is
+    # the remedy: a `captionFixes:` map in script.yaml, applied per word after
+    # transcription. It is deterministic and survives re-running captions.py,
+    # unlike hand-editing project.json.
+    fixes = {str(k): str(v) for k, v in (script.get("captionFixes") or {}).items()}
+    lowered = {k.lower(): v for k, v in fixes.items()}
+    used: set[str] = set()
+
+    def correct(word: str) -> str:
+        # Match on the bare word so a fix does not have to anticipate the
+        # punctuation whisper attaches, then put that punctuation back.
+        stripped = word.strip(".,!?;:\"'")
+        trailing = word[len(word.rstrip(".,!?;:\"'")) :]
+        replacement = fixes.get(stripped) or lowered.get(stripped.lower())
+        if replacement is None:
+            return word
+        used.add(stripped)
+        return replacement + trailing
+
     captions = []
     for segment in transcription:
-        text = segment["text"].strip()
+        text = correct(segment["text"].strip())
         if not text:
             continue
         captions.append(
@@ -124,6 +144,16 @@ def main() -> None:
     project["captionsForDurationMs"] = project["terminalDurationMs"]
     project_path.write_text(json.dumps(project, indent=2, ensure_ascii=False) + "\n")
     print(f"==> wrote {len(captions)} words into {project_path}")
+    if used:
+        print(f"    corrected {', '.join(sorted(used))}")
+    # A fix that never matched is usually a fix for a mishearing that has since
+    # changed, and it will quietly stop protecting the caption it was added for.
+    unused = set(fixes) - used
+    if unused:
+        print(
+            "    warning: captionFixes never matched: " + ", ".join(sorted(unused)),
+            file=sys.stderr,
+        )
 
 
 if __name__ == "__main__":

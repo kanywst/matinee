@@ -20,6 +20,15 @@ source:
   repoDir: .
   tapeRel: projects/hello/demo.tape
 
+# Captions are transcribed from the generated audio, so they inherit whatever
+# the voice sounded like. "comments in your tape" came back as "comments and
+# your tape"; rewording until the transcription is right beats a captionFixes
+# entry here, because `and` is a word this script uses legitimately elsewhere
+# and the fixes apply to every occurrence. A word that appears once, like the
+# lowercased sentence opener below, is safe to fix here.
+captionFixes:
+  chapters: Chapters
+
 narration:
-  Say hello: Chapters come from the comments in your tape.
+  Say hello: Chapters come from your tape's own comments.
   Say goodbye: Narration comes from this file, and the captions from the audio.

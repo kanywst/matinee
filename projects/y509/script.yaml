@@ -35,6 +35,16 @@ crop:
   Export via huh form: { x: 0.14, y: 0.20, w: 0.72, h: 0.52 }
   Help: { x: 0.14, y: 0.26, w: 0.72, h: 0.44 }
 
+# Captions come from transcribing the audio, so they inherit whatever the
+# voice sounded like -- "y509" lands as "Wi-5009", "a cert" as "assert".
+# These correct it per word, after transcription.
+captionFixes:
+  Wi-5009: y509
+  assert: a cert
+  PAM: PEM
+  sans: SANs
+  jump: jumps
+
 narration:
   Launch: y509 opens any certificate chain in your terminal.
   Switch to details pane and browse tabs: Subject, issuer, validity, SANs — tab by tab.
