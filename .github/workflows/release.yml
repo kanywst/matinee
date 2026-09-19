@@ -16,6 +16,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # The release is cut with gh and GH_TOKEN, so the checkout has no
+          # need to keep a credential in .git/config.
+          persist-credentials: false
 
       # matinee is run from a checkout rather than installed, so a release is
       # a marker and a changelog, not an artifact. Gating it on the same checks

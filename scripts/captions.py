@@ -40,6 +40,29 @@ from pathlib import Path
 import yaml
 
 MODEL_DIR = Path.home() / ".cache" / "whisper"
+# Punctuation whisper attaches to a word. A fix matches the bare word, so this
+# is stripped for the lookup and restored on both sides afterwards.
+PUNCTUATION = ".,!?;:\"'()[]"
+
+
+def correct(word: str, fixes: dict[str, str], used: set[str]) -> str:
+    """Apply a captionFixes entry to one transcribed word.
+
+    Matching on the bare word means a fix does not have to anticipate whatever
+    punctuation whisper attached; restoring both sides means a quoted or
+    parenthesised word keeps its brackets.
+    """
+    stripped = word.strip(PUNCTUATION)
+    if not stripped:
+        return word
+    leading = word[: len(word) - len(word.lstrip(PUNCTUATION))]
+    trailing = word[len(word.rstrip(PUNCTUATION)) :]
+    lowered = {k.lower(): v for k, v in fixes.items()}
+    replacement = fixes.get(stripped) or lowered.get(stripped.lower())
+    if replacement is None:
+        return word
+    used.add(stripped)
+    return leading + replacement + trailing
 
 
 def main() -> None:
@@ -108,23 +131,11 @@ def main() -> None:
     # transcription. It is deterministic and survives re-running captions.py,
     # unlike hand-editing project.json.
     fixes = {str(k): str(v) for k, v in (script.get("captionFixes") or {}).items()}
-    lowered = {k.lower(): v for k, v in fixes.items()}
     used: set[str] = set()
-
-    def correct(word: str) -> str:
-        # Match on the bare word so a fix does not have to anticipate the
-        # punctuation whisper attaches, then put that punctuation back.
-        stripped = word.strip(".,!?;:\"'")
-        trailing = word[len(word.rstrip(".,!?;:\"'")) :]
-        replacement = fixes.get(stripped) or lowered.get(stripped.lower())
-        if replacement is None:
-            return word
-        used.add(stripped)
-        return replacement + trailing
 
     captions = []
     for segment in transcription:
-        text = correct(segment["text"].strip())
+        text = correct(segment["text"].strip(), fixes, used)
         if not text:
             continue
         captions.append(

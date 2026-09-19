@@ -57,7 +57,9 @@ Narration uses the built-in `say`. Nothing else to install.
 sudo apt-get install -y ffmpeg espeak-ng
 npm install
 
-# whisper-cli, for captions. No apt package; build it or grab a release from
+# whisper-cli, for captions. No apt package; build it or grab a release.
+# The code lives under ggml-org; the models are still published under
+# ggerganov on Hugging Face. Both URLs below are correct.
 # https://github.com/ggml-org/whisper.cpp
 git clone https://github.com/ggml-org/whisper.cpp && cd whisper.cpp
 cmake -B build && cmake --build build -j --config Release
