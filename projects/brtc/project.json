@@ -1,0 +1,157 @@
+{
+  "id": "brtc",
+  "title": "brtc",
+  "subtitle": "Stop guessing password strength. Calculate the actual bill — time and USD to crack it, per GPU profile.",
+  "repo": "github.com/kanywst/brtc",
+  "accent": "#bd93f9",
+  "terminalDurationMs": 19480,
+  "terminalWidth": 2200,
+  "terminalHeight": 1368,
+  "chapters": [
+    {
+      "title": "Step 1: Show a weak password",
+      "startMs": 0,
+      "narration": "brtc turns entropy into a price tag. A short password against bcrypt on a 4090."
+    },
+    {
+      "title": "Step 2: Show a strong password with a different",
+      "startMs": 15388,
+      "narration": "A stronger password, a cluster, and a budget. There is the receipt."
+    }
+  ],
+  "terminalSrc": "projects/brtc/terminal.mp4",
+  "captions": [
+    {
+      "text": "BRTC",
+      "startMs": 10,
+      "endMs": 870
+    },
+    {
+      "text": "turns",
+      "startMs": 870,
+      "endMs": 1810
+    },
+    {
+      "text": "entropy",
+      "startMs": 1810,
+      "endMs": 3220
+    },
+    {
+      "text": "into",
+      "startMs": 3220,
+      "endMs": 4020
+    },
+    {
+      "text": "a",
+      "startMs": 4020,
+      "endMs": 4240
+    },
+    {
+      "text": "price",
+      "startMs": 4240,
+      "endMs": 5230
+    },
+    {
+      "text": "tag,",
+      "startMs": 5230,
+      "endMs": 5900
+    },
+    {
+      "text": "a",
+      "startMs": 5900,
+      "endMs": 6430
+    },
+    {
+      "text": "short",
+      "startMs": 6430,
+      "endMs": 7440
+    },
+    {
+      "text": "password",
+      "startMs": 7440,
+      "endMs": 9050
+    },
+    {
+      "text": "against",
+      "startMs": 9050,
+      "endMs": 10460
+    },
+    {
+      "text": "Krypton",
+      "startMs": 10460,
+      "endMs": 11870
+    },
+    {
+      "text": "of",
+      "startMs": 11870,
+      "endMs": 12270
+    },
+    {
+      "text": "4090.",
+      "startMs": 12270,
+      "endMs": 15360
+    },
+    {
+      "text": "A",
+      "startMs": 15360,
+      "endMs": 15430
+    },
+    {
+      "text": "stronger",
+      "startMs": 15430,
+      "endMs": 16010
+    },
+    {
+      "text": "password,",
+      "startMs": 16010,
+      "endMs": 16690
+    },
+    {
+      "text": "a",
+      "startMs": 16690,
+      "endMs": 16760
+    },
+    {
+      "text": "cluster,",
+      "startMs": 16760,
+      "endMs": 17400
+    },
+    {
+      "text": "and",
+      "startMs": 17400,
+      "endMs": 17600
+    },
+    {
+      "text": "a",
+      "startMs": 17600,
+      "endMs": 17690
+    },
+    {
+      "text": "budget,",
+      "startMs": 17690,
+      "endMs": 18280
+    },
+    {
+      "text": "there",
+      "startMs": 18280,
+      "endMs": 18580
+    },
+    {
+      "text": "is",
+      "startMs": 18580,
+      "endMs": 18750
+    },
+    {
+      "text": "the",
+      "startMs": 18750,
+      "endMs": 18930
+    },
+    {
+      "text": "receipt.",
+      "startMs": 18930,
+      "endMs": 19480
+    }
+  ],
+  "captionsForDurationMs": 19480,
+  "audioSrc": "projects/brtc/narration.wav"
+}

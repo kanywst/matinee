@@ -1,0 +1,12 @@
+node_modules/
+out/
+.cache/
+
+# Generated assets. Rebuilt by `make video`; too big and too regenerable to
+# track. project.json is checked in -- it is the contract, not an artifact.
+public/projects/*/terminal.mp4
+public/projects/*/narration.wav
+public/projects/*/broll.mp4
+__pycache__/
+*.pyc
+.DS_Store

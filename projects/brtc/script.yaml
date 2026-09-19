@@ -1,0 +1,17 @@
+id: brtc
+title: brtc
+subtitle: Stop guessing password strength. Calculate the actual bill — time and USD to crack it, per GPU profile.
+repo: github.com/kanywst/brtc
+# Dracula's purple, because brtc's tape sets `Set Theme "Dracula"` rather than
+# the Catppuccin the other tapes use.
+accent: "#bd93f9"
+
+lang: en
+
+source:
+  repoDir: ~/brtc
+  tapeRel: assets/demo.tape
+
+narration:
+  "Step 1: Show a weak password": brtc turns entropy into a price tag. A short password against bcrypt on a 4090.
+  "Step 2: Show a strong password with a different": A stronger password, a cluster, and a budget. There is the receipt.

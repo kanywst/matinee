@@ -1,0 +1,26 @@
+id: prpr
+title: prpr
+subtitle: Every open pull request you can see, on one screen — and a 🎉 when one merges out from under you.
+repo: github.com/kanywst/prpr
+accent: "#f5c2e7"
+
+lang: en
+
+source:
+  repoDir: ~/prpr
+  tapeRel: docs/demo.tape
+
+# The tape runs `prpr --demo`, which serves a fixed fixture list instead of
+# GitHub, so the recording is the same every time and publishes nobody's
+# account contents.
+narration:
+  Owner discovery: prpr asks GitHub who you are, then lists every open pull request under you and your orgs.
+  Walk the list: Arrow through them.
+  The detail pane: The detail pane shows the branch, the diff stat and the reviewers.
+  Filter down to one repository: Filtering searches titles, repositories, authors and labels at once.
+  Tabs: Four tabs — everything, yours, awaiting your review, and drafts.
+  # Quoted: an unquoted ` #` starts a YAML comment, which swallows the colon
+  # and makes the whole file fail to parse.
+  # Only ~1.5s of clip left after this mark, so the line has to be short or
+  # tts.py's trim cuts it off mid-sentence.
+  "Wait for the refresh that finds #127 merged": And it waves goodbye.

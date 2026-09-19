@@ -1,0 +1,337 @@
+{
+  "id": "y509",
+  "title": "y509",
+  "subtitle": "X.509 chains in your terminal — catches the missing intermediates and bad ordering that break curl but not browsers.",
+  "repo": "github.com/kanywst/y509",
+  "accent": "#a6e3a1",
+  "terminalDurationMs": 27880,
+  "terminalWidth": 2280,
+  "terminalHeight": 1406,
+  "chapters": [
+    {
+      "title": "Launch",
+      "startMs": 0,
+      "narration": "y509 opens any certificate chain in your terminal."
+    },
+    {
+      "title": "Navigate certificate list",
+      "startMs": 3864,
+      "narration": ""
+    },
+    {
+      "title": "Switch to details pane and browse tabs",
+      "startMs": 5409,
+      "narration": "Subject, issuer, validity, SANs — tab by tab."
+    },
+    {
+      "title": "Search",
+      "startMs": 10249,
+      "narration": "Search jumps straight to a certificate."
+    },
+    {
+      "title": "Filter",
+      "startMs": 13116,
+      "narration": "Filter narrows it to the expired ones."
+    },
+    {
+      "title": "Validate",
+      "startMs": 16167,
+      "narration": "Validate walks the trust path."
+    },
+    {
+      "title": "Yank current cert as PEM",
+      "startMs": 18729,
+      "narration": "Yank copies a cert as PEM."
+    },
+    {
+      "title": "Export via huh form",
+      "startMs": 20722,
+      "narration": "Export writes it out in the format you pick."
+    },
+    {
+      "title": "Help",
+      "startMs": 25724,
+      "narration": "And every key is listed in the help."
+    }
+  ],
+  "terminalSrc": "projects/y509/terminal.mp4",
+  "captions": [
+    {
+      "text": "Wi-5009",
+      "startMs": 10,
+      "endMs": 970
+    },
+    {
+      "text": "opens",
+      "startMs": 970,
+      "endMs": 1350
+    },
+    {
+      "text": "any",
+      "startMs": 1350,
+      "endMs": 1530
+    },
+    {
+      "text": "certificate",
+      "startMs": 1530,
+      "endMs": 2220
+    },
+    {
+      "text": "chain",
+      "startMs": 2220,
+      "endMs": 2550
+    },
+    {
+      "text": "in",
+      "startMs": 2550,
+      "endMs": 2680
+    },
+    {
+      "text": "your",
+      "startMs": 2680,
+      "endMs": 2940
+    },
+    {
+      "text": "terminal.",
+      "startMs": 2940,
+      "endMs": 5400
+    },
+    {
+      "text": "Subject,",
+      "startMs": 5400,
+      "endMs": 6240
+    },
+    {
+      "text": "issuer,",
+      "startMs": 6240,
+      "endMs": 7220
+    },
+    {
+      "text": "validity,",
+      "startMs": 7220,
+      "endMs": 8430
+    },
+    {
+      "text": "sans,",
+      "startMs": 8430,
+      "endMs": 9170
+    },
+    {
+      "text": "tab",
+      "startMs": 9170,
+      "endMs": 9540
+    },
+    {
+      "text": "by",
+      "startMs": 9540,
+      "endMs": 9780
+    },
+    {
+      "text": "tab.",
+      "startMs": 9780,
+      "endMs": 10200
+    },
+    {
+      "text": "Search",
+      "startMs": 10200,
+      "endMs": 10740
+    },
+    {
+      "text": "jump",
+      "startMs": 10740,
+      "endMs": 11090
+    },
+    {
+      "text": "straight",
+      "startMs": 11090,
+      "endMs": 11800
+    },
+    {
+      "text": "to",
+      "startMs": 11800,
+      "endMs": 12000
+    },
+    {
+      "text": "a",
+      "startMs": 12000,
+      "endMs": 12070
+    },
+    {
+      "text": "certificate.",
+      "startMs": 12070,
+      "endMs": 13080
+    },
+    {
+      "text": "Filter",
+      "startMs": 13080,
+      "endMs": 13620
+    },
+    {
+      "text": "narrows",
+      "startMs": 13620,
+      "endMs": 14220
+    },
+    {
+      "text": "it",
+      "startMs": 14220,
+      "endMs": 14430
+    },
+    {
+      "text": "to",
+      "startMs": 14430,
+      "endMs": 14610
+    },
+    {
+      "text": "the",
+      "startMs": 14610,
+      "endMs": 14820
+    },
+    {
+      "text": "expired",
+      "startMs": 14820,
+      "endMs": 15440
+    },
+    {
+      "text": "ones.",
+      "startMs": 15440,
+      "endMs": 16120
+    },
+    {
+      "text": "Validate",
+      "startMs": 16120,
+      "endMs": 16840
+    },
+    {
+      "text": "walks",
+      "startMs": 16840,
+      "endMs": 17290
+    },
+    {
+      "text": "the",
+      "startMs": 17290,
+      "endMs": 17560
+    },
+    {
+      "text": "trust",
+      "startMs": 17560,
+      "endMs": 18010
+    },
+    {
+      "text": "path.",
+      "startMs": 18010,
+      "endMs": 18680
+    },
+    {
+      "text": "Yank",
+      "startMs": 18680,
+      "endMs": 19000
+    },
+    {
+      "text": "copies",
+      "startMs": 19000,
+      "endMs": 19490
+    },
+    {
+      "text": "assert",
+      "startMs": 19490,
+      "endMs": 20030
+    },
+    {
+      "text": "as",
+      "startMs": 20030,
+      "endMs": 20140
+    },
+    {
+      "text": "PAM.",
+      "startMs": 20140,
+      "endMs": 20680
+    },
+    {
+      "text": "Export",
+      "startMs": 20680,
+      "endMs": 21030
+    },
+    {
+      "text": "writes",
+      "startMs": 21030,
+      "endMs": 21380
+    },
+    {
+      "text": "it",
+      "startMs": 21380,
+      "endMs": 21490
+    },
+    {
+      "text": "out",
+      "startMs": 21490,
+      "endMs": 21660
+    },
+    {
+      "text": "in",
+      "startMs": 21660,
+      "endMs": 21770
+    },
+    {
+      "text": "the",
+      "startMs": 21770,
+      "endMs": 21940
+    },
+    {
+      "text": "format",
+      "startMs": 21940,
+      "endMs": 22290
+    },
+    {
+      "text": "you",
+      "startMs": 22290,
+      "endMs": 22480
+    },
+    {
+      "text": "pick.",
+      "startMs": 22480,
+      "endMs": 22920
+    },
+    {
+      "text": "And",
+      "startMs": 25680,
+      "endMs": 25680
+    },
+    {
+      "text": "every",
+      "startMs": 25680,
+      "endMs": 25680
+    },
+    {
+      "text": "key",
+      "startMs": 25680,
+      "endMs": 25680
+    },
+    {
+      "text": "is",
+      "startMs": 25680,
+      "endMs": 25680
+    },
+    {
+      "text": "listed",
+      "startMs": 25680,
+      "endMs": 25690
+    },
+    {
+      "text": "in",
+      "startMs": 25690,
+      "endMs": 25970
+    },
+    {
+      "text": "the",
+      "startMs": 25970,
+      "endMs": 26380
+    },
+    {
+      "text": "help.",
+      "startMs": 26380,
+      "endMs": 27440
+    }
+  ],
+  "captionsForDurationMs": 27880,
+  "audioSrc": "projects/y509/narration.wav"
+}

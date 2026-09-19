@@ -1,0 +1,317 @@
+{
+  "id": "prpr",
+  "title": "prpr",
+  "subtitle": "Every open pull request you can see, on one screen — and a 🎉 when one merges out from under you.",
+  "repo": "github.com/kanywst/prpr",
+  "accent": "#f5c2e7",
+  "terminalDurationMs": 27791,
+  "terminalWidth": 2014,
+  "terminalHeight": 1226,
+  "chapters": [
+    {
+      "title": "Owner discovery",
+      "startMs": 0,
+      "narration": "prpr asks GitHub who you are, then lists every open pull request under you and your orgs."
+    },
+    {
+      "title": "Walk the list",
+      "startMs": 5695,
+      "narration": "Arrow through them."
+    },
+    {
+      "title": "The detail pane",
+      "startMs": 7433,
+      "narration": "The detail pane shows the branch, the diff stat and the reviewers."
+    },
+    {
+      "title": "Filter down to one repository",
+      "startMs": 11336,
+      "narration": "Filtering searches titles, repositories, authors and labels at once."
+    },
+    {
+      "title": "Tabs",
+      "startMs": 16844,
+      "narration": "Four tabs — everything, yours, awaiting your review, and drafts."
+    },
+    {
+      "title": "Wait for the refresh that finds #127 merged",
+      "startMs": 26260,
+      "narration": "And it waves goodbye."
+    }
+  ],
+  "terminalSrc": "projects/prpr/terminal.mp4",
+  "captions": [
+    {
+      "text": "PRPR",
+      "startMs": 50,
+      "endMs": 440
+    },
+    {
+      "text": "asks",
+      "startMs": 440,
+      "endMs": 720
+    },
+    {
+      "text": "GitHub",
+      "startMs": 720,
+      "endMs": 1260
+    },
+    {
+      "text": "who",
+      "startMs": 1260,
+      "endMs": 1530
+    },
+    {
+      "text": "you",
+      "startMs": 1530,
+      "endMs": 1800
+    },
+    {
+      "text": "are,",
+      "startMs": 1800,
+      "endMs": 2360
+    },
+    {
+      "text": "then",
+      "startMs": 2360,
+      "endMs": 2510
+    },
+    {
+      "text": "lists",
+      "startMs": 2510,
+      "endMs": 2860
+    },
+    {
+      "text": "every",
+      "startMs": 2860,
+      "endMs": 3090
+    },
+    {
+      "text": "open",
+      "startMs": 3090,
+      "endMs": 3320
+    },
+    {
+      "text": "pool",
+      "startMs": 3320,
+      "endMs": 3550
+    },
+    {
+      "text": "request",
+      "startMs": 3550,
+      "endMs": 3960
+    },
+    {
+      "text": "under",
+      "startMs": 3960,
+      "endMs": 4250
+    },
+    {
+      "text": "you",
+      "startMs": 4250,
+      "endMs": 4420
+    },
+    {
+      "text": "and",
+      "startMs": 4420,
+      "endMs": 4590
+    },
+    {
+      "text": "your",
+      "startMs": 4590,
+      "endMs": 4870
+    },
+    {
+      "text": "orgs,",
+      "startMs": 4870,
+      "endMs": 5720
+    },
+    {
+      "text": "arrow",
+      "startMs": 5720,
+      "endMs": 6250
+    },
+    {
+      "text": "through",
+      "startMs": 6250,
+      "endMs": 7000
+    },
+    {
+      "text": "them.",
+      "startMs": 7000,
+      "endMs": 7460
+    },
+    {
+      "text": "The",
+      "startMs": 7460,
+      "endMs": 7660
+    },
+    {
+      "text": "detail",
+      "startMs": 7660,
+      "endMs": 8070
+    },
+    {
+      "text": "pane",
+      "startMs": 8070,
+      "endMs": 8340
+    },
+    {
+      "text": "shows",
+      "startMs": 8340,
+      "endMs": 8680
+    },
+    {
+      "text": "the",
+      "startMs": 8680,
+      "endMs": 8880
+    },
+    {
+      "text": "branch,",
+      "startMs": 8880,
+      "endMs": 9420
+    },
+    {
+      "text": "the",
+      "startMs": 9420,
+      "endMs": 9820
+    },
+    {
+      "text": "diff",
+      "startMs": 9820,
+      "endMs": 9890
+    },
+    {
+      "text": "stat",
+      "startMs": 9890,
+      "endMs": 10160
+    },
+    {
+      "text": "and",
+      "startMs": 10160,
+      "endMs": 10360
+    },
+    {
+      "text": "the",
+      "startMs": 10360,
+      "endMs": 10560
+    },
+    {
+      "text": "reviewers,",
+      "startMs": 10560,
+      "endMs": 11400
+    },
+    {
+      "text": "filtering",
+      "startMs": 11400,
+      "endMs": 11910
+    },
+    {
+      "text": "searches",
+      "startMs": 11910,
+      "endMs": 12380
+    },
+    {
+      "text": "titles,",
+      "startMs": 12380,
+      "endMs": 13160
+    },
+    {
+      "text": "repositories,",
+      "startMs": 13160,
+      "endMs": 14740
+    },
+    {
+      "text": "authors",
+      "startMs": 14740,
+      "endMs": 15240
+    },
+    {
+      "text": "and",
+      "startMs": 15240,
+      "endMs": 15510
+    },
+    {
+      "text": "labels",
+      "startMs": 15510,
+      "endMs": 16100
+    },
+    {
+      "text": "at",
+      "startMs": 16100,
+      "endMs": 16290
+    },
+    {
+      "text": "once.",
+      "startMs": 16290,
+      "endMs": 17040
+    },
+    {
+      "text": "Four",
+      "startMs": 17040,
+      "endMs": 17680
+    },
+    {
+      "text": "tabs,",
+      "startMs": 17680,
+      "endMs": 18640
+    },
+    {
+      "text": "everything,",
+      "startMs": 18640,
+      "endMs": 20560
+    },
+    {
+      "text": "yours,",
+      "startMs": 20560,
+      "endMs": 21680
+    },
+    {
+      "text": "awaiting",
+      "startMs": 21680,
+      "endMs": 22960
+    },
+    {
+      "text": "your",
+      "startMs": 22960,
+      "endMs": 24480
+    },
+    {
+      "text": "review,",
+      "startMs": 24480,
+      "endMs": 24880
+    },
+    {
+      "text": "and",
+      "startMs": 24880,
+      "endMs": 25360
+    },
+    {
+      "text": "drafts.",
+      "startMs": 25360,
+      "endMs": 26380
+    },
+    {
+      "text": "and",
+      "startMs": 26430,
+      "endMs": 26560
+    },
+    {
+      "text": "it",
+      "startMs": 26560,
+      "endMs": 26680
+    },
+    {
+      "text": "waves",
+      "startMs": 26680,
+      "endMs": 26980
+    },
+    {
+      "text": "goodbye",
+      "startMs": 26980,
+      "endMs": 27420
+    }
+  ],
+  "captionsForDurationMs": 27791,
+  "audioSrc": "projects/prpr/narration.wav"
+}

@@ -1,0 +1,42 @@
+# The hand-authored half of a demo video. Everything else -- chapter titles,
+# timings, captions, durations -- is derived by scripts/build_project.py.
+#
+# Narration is keyed by chapter title rather than listed in order, so
+# reordering the tape's sections does not silently reassign the voiceover to
+# the wrong shot. A chapter with no entry here plays silent, which is the right
+# answer for beats too short to say anything over.
+
+id: y509
+title: y509
+subtitle: X.509 chains in your terminal — catches the missing intermediates and bad ordering that break curl but not browsers.
+repo: github.com/kanywst/y509
+accent: "#a6e3a1"
+
+# en -> macOS `say`; ja -> VOICEVOX. See scripts/tts.py.
+lang: en
+
+source:
+  repoDir: ~/y509
+  tapeRel: demo.tape
+
+narration:
+  Launch: y509 opens any certificate chain in your terminal.
+  Switch to details pane and browse tabs: Subject, issuer, validity, SANs — tab by tab.
+  Search: Search jumps straight to a certificate.
+  Filter: Filter narrows it to the expired ones.
+  Validate: Validate walks the trust path.
+  Yank current cert as PEM: Yank copies a cert as PEM.
+  Export via huh form: Export writes it out in the format you pick.
+  Help: And every key is listed in the help.
+
+# Step 4, the only paid step. Commented out because it is opt-in: with no
+# `broll:` block the title card is a flat colour, which is a perfectly good
+# title card. Uncomment, set FAL_KEY, and run scripts/broll.py.
+#
+# broll:
+#   prompt: >-
+#     Slow macro dolly across a dark lattice of faintly glowing green lines
+#     resolving into a chain, shallow depth of field, deep navy background,
+#     subtle drift, no text.
+#   model: fal-ai/wan-25-preview/text-to-video
+#   durationSeconds: 5
