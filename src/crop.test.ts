@@ -7,6 +7,7 @@ import {
   isFullFrame,
   lerpCrop,
   normaliseCrop,
+  visibleRect,
 } from "./crop";
 import type { Chapter } from "./types";
 
@@ -151,24 +152,84 @@ describe("cropTransform", () => {
     expect(cropTransform({ x: 0, y: 0, w: 0.25, h: 0.25 }).scale).toBe(4);
   });
 
-  it("uses the larger dimension so the crop always fits", () => {
-    // A wide, short crop must not scale by its height, or the sides get cut.
-    expect(cropTransform({ x: 0, y: 0, w: 1, h: 0.25 }).scale).toBe(1);
+  it("scales by the smaller dimension, so the crop covers the card", () => {
+    // Fitting by the larger dimension would leave background showing along
+    // the other axis, and would make an h:1 crop a pan instead of a zoom.
+    expect(cropTransform({ x: 0, y: 0, w: 1, h: 0.25 }).scale).toBe(4);
+    expect(cropTransform({ x: 0.5, y: 0, w: 0.5, h: 1 }).scale).toBe(2);
   });
 
-  it("shifts a left-hand crop to the right", () => {
-    const t = cropTransform({ x: 0, y: 0, w: 0.5, h: 1 });
-    expect(t.translatePercentX).toBeGreaterThan(0);
-  });
-
-  it("shifts a right-hand crop to the left", () => {
-    const t = cropTransform({ x: 0.5, y: 0, w: 0.5, h: 1 });
-    expect(t.translatePercentX).toBeLessThan(0);
-  });
-
-  it("emits a css transform string", () => {
+  it("scales before it translates", () => {
+    // The order matters: a percentage translate resolves against the
+    // element's unscaled box, so `translate(p%) scale(s)` moves by 1/s of
+    // what it should and shows the wrong region entirely.
     expect(cropTransform({ x: 0, y: 0, w: 0.5, h: 0.5 }).css).toMatch(
-      /^translate\(.*%, .*%\) scale\(2\.0000\)$/,
+      /^scale\(2\.0000\) translate\(.*%, .*%\)$/,
     );
+  });
+});
+
+describe("visibleRect", () => {
+  it("shows the whole recording for the whole frame", () => {
+    const r = visibleRect(FULL_FRAME);
+    expect(r.x).toBeCloseTo(0, 6);
+    expect(r.y).toBeCloseTo(0, 6);
+    expect(r.w).toBeCloseTo(1, 6);
+    expect(r.h).toBeCloseTo(1, 6);
+  });
+
+  it("centres on the crop's centre", () => {
+    const crops = [
+      { x: 0, y: 0, w: 0.52, h: 0.62 },
+      { x: 0.5, y: 0, w: 0.5, h: 1 },
+      { x: 0.14, y: 0.24, w: 0.72, h: 0.46 },
+      { x: 0.25, y: 0.25, w: 0.5, h: 0.5 },
+    ];
+    for (const crop of crops) {
+      const r = visibleRect(crop);
+      expect(r.x + r.w / 2).toBeCloseTo(crop.x + crop.w / 2, 6);
+      expect(r.y + r.h / 2).toBeCloseTo(crop.y + crop.h / 2, 6);
+    }
+  });
+
+  it("matches the crop exactly when the crop is square", () => {
+    const crop = { x: 0.25, y: 0.25, w: 0.5, h: 0.5 };
+    const r = visibleRect(crop);
+    expect(r.x).toBeCloseTo(crop.x, 6);
+    expect(r.y).toBeCloseTo(crop.y, 6);
+    expect(r.w).toBeCloseTo(crop.w, 6);
+    expect(r.h).toBeCloseTo(crop.h, 6);
+  });
+
+  it("never shows more than the crop on its short axis", () => {
+    // Cover: the short axis is exactly the crop, the long axis is trimmed.
+    for (const crop of [
+      { x: 0, y: 0, w: 0.52, h: 0.62 },
+      { x: 0.5, y: 0, w: 0.5, h: 1 },
+      { x: 0, y: 0.45, w: 1, h: 0.1 },
+    ]) {
+      const r = visibleRect(crop);
+      const short = Math.min(crop.w, crop.h);
+      expect(Math.min(r.w, r.h)).toBeCloseTo(short, 6);
+      expect(r.w).toBeLessThanOrEqual(crop.w + 1e-9);
+      expect(r.h).toBeLessThanOrEqual(crop.h + 1e-9);
+    }
+  });
+
+  it("never lets the card show background outside the recording", () => {
+    const crops = [
+      { x: 0, y: 0, w: 0.52, h: 0.62 },
+      { x: 0.5, y: 0, w: 0.5, h: 1 },
+      { x: 0.9, y: 0.9, w: 0.1, h: 0.1 },
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 0.14, y: 0.2, w: 0.72, h: 0.52 },
+    ];
+    for (const crop of crops) {
+      const r = visibleRect(normaliseCrop(crop));
+      expect(r.x).toBeGreaterThanOrEqual(-1e-9);
+      expect(r.y).toBeGreaterThanOrEqual(-1e-9);
+      expect(r.x + r.w).toBeLessThanOrEqual(1 + 1e-9);
+      expect(r.y + r.h).toBeLessThanOrEqual(1 + 1e-9);
+    }
   });
 });

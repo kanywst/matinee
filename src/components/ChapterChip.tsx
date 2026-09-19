@@ -1,6 +1,7 @@
 import React from "react";
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { font, theme } from "../theme";
+import { fadeFrames } from "../layout";
 
 /**
  * The "you are here" label. Mounted inside a <Sequence> per chapter, so it
@@ -17,11 +18,10 @@ export const ChapterChip: React.FC<{
   const { durationInFrames } = useVideoConfig();
 
   // interpolate() requires a strictly increasing input range, so the fade
-  // window has to shrink with the chapter. A fixed 10 frames throws on any
-  // chapter under ~2/3 of a second -- which a tape with a quick section
-  // produces, and which DemoVideo's Math.max(1, …) can also produce from
-  // chapters that are out of order.
-  const fade = Math.max(1, Math.min(10, Math.floor(durationInFrames / 2)));
+  // window has to shrink with the chapter -- see fadeFrames for why it is
+  // (d - 1) / 2 and not d / 2. A tape with a quick section produces these,
+  // and so does DemoVideo's Math.max(1, …) on chapters that are out of order.
+  const fade = fadeFrames(durationInFrames);
   const opacity =
     durationInFrames < 4
       ? 1

@@ -10,6 +10,18 @@
 
 export const WINDOW_BAR_HEIGHT = 52;
 
+/**
+ * Half-width of a fade-in/fade-out pair that fits inside `durationInFrames`.
+ *
+ * Remotion's `interpolate` requires a strictly increasing input range, so a
+ * fade window of `f` frames at each end needs `f < d - f`. A fixed 10 crashed
+ * the whole render on a short chapter; clamping to `floor(d / 2)` still
+ * crashed on every even `d` in 4..20, because there `f === d - f`. Hence
+ * `(d - 1) / 2`, and a caller that skips the fade entirely below 4 frames.
+ */
+export const fadeFrames = (durationInFrames: number): number =>
+  Math.max(1, Math.min(10, Math.floor((durationInFrames - 1) / 2)));
+
 type Band = {
   /** Space reserved above the card for the chapter chip. */
   top: number;

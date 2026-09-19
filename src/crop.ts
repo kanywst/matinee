@@ -94,12 +94,24 @@ export const cropAt = (chapters: Chapter[], nowMs: number): Crop => {
 /**
  * Turn a crop into a CSS transform on the video element.
  *
- * The video keeps filling the card; the transform scales it up around the
- * crop's centre so the cropped region is what remains visible. Returned as a
- * scale plus a percentage translate, which is resolution-independent.
+ * Two things here are easy to get wrong, and both were:
+ *
+ * **Order.** `translate(p%) scale(s)` does not do what it looks like. A
+ * percentage translate resolves against the element's own unscaled border box,
+ * so composed in that order the shift lands short by a factor of `s` and every
+ * crop shows the wrong region. `scale(s) translate(p%)` applies the translate
+ * inside the scaled space, which is the one that works.
+ *
+ * **Which dimension sets the scale.** The card's aspect is the whole
+ * recording's, and a crop rarely matches it, so the crop cannot fill the card
+ * exactly. `1 / max(w, h)` fits the crop inside the card and leaves background
+ * showing along one axis. `1 / min(w, h)` covers instead: the crop always
+ * fills the card, at the cost of trimming its longer axis. Cover is right for
+ * a zoom -- background bleed inside the terminal chrome reads as a bug, and it
+ * also means a `h: 1` crop still zooms rather than silently becoming a pan.
  */
 export const cropTransform = (crop: Crop) => {
-  const scale = 1 / Math.max(crop.w, crop.h);
+  const scale = 1 / Math.min(crop.w, crop.h);
   // Distance from the crop's centre to the frame's, as a fraction of the frame.
   const dx = 0.5 - (crop.x + crop.w / 2);
   const dy = 0.5 - (crop.y + crop.h / 2);
@@ -108,7 +120,29 @@ export const cropTransform = (crop: Crop) => {
     translatePercentX: dx * 100,
     translatePercentY: dy * 100,
     css:
-      `translate(${(dx * 100).toFixed(3)}%, ${(dy * 100).toFixed(3)}%) ` +
-      `scale(${scale.toFixed(4)})`,
+      `scale(${scale.toFixed(4)}) ` +
+      `translate(${(dx * 100).toFixed(3)}%, ${(dy * 100).toFixed(3)}%)`,
   };
+};
+
+/**
+ * The region of the recording a transform actually leaves visible, in the same
+ * normalised units as a Crop.
+ *
+ * Exists so the tests can assert what ends up on screen rather than what the
+ * scale and translate happen to be: the transform was once composed in the
+ * wrong order, showing a visibly different rectangle, and every assertion
+ * about its parts still passed.
+ */
+export const visibleRect = (crop: Crop): Crop => {
+  const { scale, translatePercentX, translatePercentY } = cropTransform(crop);
+  // A source point u maps to 0.5 + scale * (u - 0.5) + scale * translate.
+  // Inverting for the card's edges, 0 and 1:
+  const inverse = (t: number, translate: number) =>
+    (t - 0.5) / scale + 0.5 - translate;
+  const x0 = inverse(0, translatePercentX / 100);
+  const x1 = inverse(1, translatePercentX / 100);
+  const y0 = inverse(0, translatePercentY / 100);
+  const y1 = inverse(1, translatePercentY / 100);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 };

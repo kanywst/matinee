@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bands, fitCard, WINDOW_BAR_HEIGHT } from "./layout";
+import { bands, fadeFrames, fitCard, WINDOW_BAR_HEIGHT } from "./layout";
 
 /**
  * These guard the defect that shipped once already: the card was sized by
@@ -103,6 +103,30 @@ describe("bands", () => {
       expect(band.captionBottom + band.captionReserve).toBeLessThanOrEqual(
         band.bottom,
       );
+    }
+  });
+});
+
+describe("fadeFrames", () => {
+  // Regression: interpolate() needs [0, f, d-f, d] strictly increasing, so
+  // f must be < d/2. A fixed 10 crashed short chapters; floor(d/2) still
+  // crashed on every even d in 4..20, where f === d - f.
+  it("always leaves a strictly increasing input range", () => {
+    for (let d = 4; d <= 400; d++) {
+      const f = fadeFrames(d);
+      expect(f).toBeGreaterThan(0);
+      expect(f).toBeLessThan(d - f);
+    }
+  });
+
+  it("never exceeds the design fade of 10 frames", () => {
+    expect(fadeFrames(1000)).toBe(10);
+    expect(fadeFrames(21)).toBe(10);
+  });
+
+  it("stays positive for degenerate durations the caller short-circuits", () => {
+    for (const d of [0, 1, 2, 3]) {
+      expect(fadeFrames(d)).toBeGreaterThanOrEqual(1);
     }
   });
 });
