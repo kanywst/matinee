@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 import yaml
-from tape_timeline import scale_marks, timeline
+from tape_timeline import TapeError, inline_sources, scale_marks, timeline
 
 
 def probe_duration_ms(path: Path) -> int:
@@ -129,7 +129,16 @@ def main() -> None:
     if not tape.exists():
         sys.exit(f"error: tape not found: {tape}")
 
-    marks, estimated = timeline(tape.read_text(encoding="utf-8"))
+    # Source paths resolve against repoDir because that is where record.sh
+    # runs vhs, not against the tape's own directory.
+    try:
+        tape_text = inline_sources(
+            tape.read_text(encoding="utf-8"),
+            Path(script["source"]["repoDir"]).expanduser(),
+        )
+    except TapeError as exc:
+        sys.exit(f"error: {tape}: {exc}")
+    marks, estimated = timeline(tape_text)
     if not marks:
         sys.exit(
             f"error: no section comments found in {tape}\n"

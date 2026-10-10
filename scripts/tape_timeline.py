@@ -41,6 +41,16 @@ statements on one line (`Down Sleep 700ms`, used seven times in prpr's tape).
 
 That is an estimate, not a measurement. Pass --duration-ms with the true clip
 length and every mark is scaled to fit it.
+
+Source
+------
+`Source other.tape` is expanded in place before the walk, the way VHS's parser
+does it: the other tape's statements replace the line, its `Output` is dropped,
+and a `Source` inside it is an error. The path is resolved against the
+directory vhs runs in -- the repo root, for record.sh -- which --base-dir
+names; it defaults to the current directory, as it does for vhs. `--inline`
+prints the expanded tape instead of the chapters, which is how record.sh
+records the same tape the chapters were read from.
 """
 
 from __future__ import annotations
@@ -85,8 +95,70 @@ KEYS = {
     "ScrollDown",
 }
 MODIFIERS = ("Ctrl+", "Alt+", "Shift+", "Cmd+")
-# Statements that take one argument and cost no time.
+# Statements that take one argument and cost no time. Source is listed for a
+# tape walked without inline_sources(); expanded, none is left.
 SKIP_WITH_ARG = {"Output", "Require", "Env", "Source"}
+# `Source config.tape` or `Source "config.tape"`, optionally with a trailing
+# comment.
+SOURCE_RE = re.compile(
+    r"""^\s*Source\s+("[^"]*"|'[^']*'|`[^`]*`|[^\s#]+)\s*(?:#.*)?$"""
+)
+OUTPUT_RE = re.compile(r"^\s*Output\b")
+# What VHS lexes as an unquoted path. Anything else after `Source` -- a leading
+# digit, `/` or `~` -- is a different token to VHS, which then refuses the tape.
+BARE_PATH_RE = re.compile(r"^[A-Za-z.][A-Za-z0-9._/%-]*$")
+
+
+class TapeError(Exception):
+    """A tape VHS itself would refuse, reported before a long recording."""
+
+
+def inline_sources(tape: str, base_dir: Path) -> str:
+    """Expand every `Source x.tape` line into x.tape's own lines.
+
+    A tape that keeps its settings or its steps in a shared file was read as
+    written, so the sections in the included file were never found and the
+    estimate came up short by however long those steps take -- which then
+    scaled every other mark too far out.
+
+    The included lines are fenced with blank lines so a comment on either side
+    of the boundary stays its own comment block: a one-line `# Setup` above the
+    Source line must not merge with the first comment of the file it pulls in
+    and turn both into prose.
+    """
+    out: list[str] = []
+    for line in tape.splitlines():
+        m = SOURCE_RE.match(line)
+        if not m:
+            out.append(line)
+            continue
+        rel = m.group(1)
+        if rel[:1] in "\"'`":
+            rel = rel[1:-1]
+        elif not BARE_PATH_RE.match(rel):
+            raise TapeError(f"Source {rel}: VHS cannot read this path unquoted")
+        if not rel.endswith(".tape"):
+            # VHS: "Expected file with .tape extension".
+            raise TapeError(f"Source {rel}: VHS only sources .tape files")
+        path = base_dir / rel
+        try:
+            included = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise TapeError(
+                f"Source {rel}: cannot read {path} ({exc.strerror})"
+            ) from exc
+        if not included:
+            raise TapeError(f"Source {rel}: {path} is empty")
+        out.append("")
+        for inner in included.splitlines():
+            if SOURCE_RE.match(inner):
+                # VHS rejects this too ("Nested Source detected").
+                raise TapeError(f"Source {rel}: {path} has a Source of its own")
+            if OUTPUT_RE.match(inner):
+                continue
+            out.append(inner)
+        out.append("")
+    return "\n".join(out) + "\n"
 
 
 def clean_title(title: str) -> str:
@@ -335,9 +407,29 @@ def main() -> None:
         default=None,
         help="true clip length from record.sh; scales the marks to fit",
     )
+    parser.add_argument(
+        "--base-dir",
+        type=Path,
+        default=None,
+        help="directory vhs runs in, for resolving Source; default: the current one",
+    )
+    parser.add_argument(
+        "--inline",
+        action="store_true",
+        help="print the tape with every Source expanded, and nothing else",
+    )
     args = parser.parse_args()
 
-    marks, estimated = timeline(args.tape.read_text(encoding="utf-8"))
+    base_dir = args.base_dir if args.base_dir is not None else Path.cwd()
+    try:
+        tape = inline_sources(args.tape.read_text(encoding="utf-8"), base_dir)
+    except TapeError as exc:
+        sys.exit(f"error: {args.tape}: {exc}")
+    if args.inline:
+        sys.stdout.write(tape)
+        return
+
+    marks, estimated = timeline(tape)
     if not marks:
         sys.exit("error: no section comments found in tape")
 

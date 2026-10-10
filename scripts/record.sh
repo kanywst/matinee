@@ -52,6 +52,7 @@ command -v ffmpeg >/dev/null || { echo "error: ffmpeg not installed (brew instal
 # probe, and this script only reaches ffprobe after a recording that takes
 # minutes. Failing here costs seconds instead.
 command -v ffprobe >/dev/null || { echo "error: ffprobe not installed (it ships with ffmpeg)" >&2; exit 69; }
+command -v uv >/dev/null || { echo "error: uv not installed (https://docs.astral.sh/uv/)" >&2; exit 69; }
 
 mkdir -p "$OUT_DIR"
 
@@ -62,12 +63,21 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/vhs-${PROJECT_ID}.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 FRAMES="$WORK/frames"
 TMP_TAPE="$WORK/recording.tape"
+EXPANDED="$WORK/expanded.tape"
+
+# Source is expanded here rather than left to vhs, with the same code that
+# reads the chapters: the Set lines of an included tape then get scaled with
+# the rest, and a Framerate set there is found. Left to vhs, a Set Width in a
+# shared config.tape would stay at 1x while the main tape's FontSize doubled --
+# the reflow the scaling note above warns about.
+uv run --quiet "$PIPELINE_DIR/scripts/tape_timeline.py" \
+  --inline --base-dir "$REPO_DIR" "$TAPE_PATH" > "$EXPANDED"
 
 # VHS's default framerate; a tape may override it with `Set Framerate`.
 FRAMERATE="$(awk '
   /^[[:space:]]*Set[[:space:]]+Framerate[[:space:]]+[0-9.]+/ { print $3; found = 1 }
   END { if (!found) print 50 }
-' "$TAPE_PATH" | tail -1)"
+' "$EXPANDED" | tail -1)"
 
 # Absolute, quoted output path: VHS lexes a bare absolute path as a sequence of
 # commands and fails to parse.
@@ -91,7 +101,7 @@ awk -v frames="$FRAMES" -v scale="$SCALE" '
     print
   }
   END { printf "Output \"%s/\"\n", frames }
-' "$TAPE_PATH" > "$TMP_TAPE"
+' "$EXPANDED" > "$TMP_TAPE"
 
 echo "==> recording $PROJECT_ID (scale ${SCALE}x, ${FRAMERATE}fps)"
 # The tape's own commands (go build, go run) assume the repo root.
