@@ -181,9 +181,10 @@ Fixes apply per word, after transcription, to every occurrence — so they suit 
 
 **Timings are estimated, then scaled.** The tape walk models typing and sleeps but not render time, so it over-shoots; the marks are scaled to the recording's measured length.
 
+**VHS writes frames, matinee encodes them.** The recording takes VHS's PNG frame output rather than its GIF or MP4, so the codec and quality are matinee's choice, and the window chrome VHS would have drawn is redrawn in `TerminalStage.tsx` instead. This began as a workaround: VHS v0.12.0's encoders wrote nothing while still exiting 0, a bug fixed in v0.12.1 ([charmbracelet/vhs#788](https://github.com/charmbracelet/vhs/pull/788)). Frame output works on either version.
+
 ## Limitations
 
-- **VHS's own encoders can fail silently.** VHS v0.12.0 shells out to ffmpeg for GIF and MP4, and against ffmpeg 9.x that call writes nothing while still logging "Creating …" and exiting 0. matinee sidesteps it by taking VHS's PNG frame output and encoding that itself — which also means the window chrome VHS would have drawn is redrawn in `TerminalStage.tsx`.
 - **The recording is not reproducible.** A tape may fetch and build before it records, so clip length depends on the machine and on cache state. That is why the chapter marks are scaled to the measured duration rather than trusted from the estimate.
 - **Chapter timings drift within a tape.** Scaling corrects the total, not a demo with one unusually slow step.
 - **`say` is macOS-only**, and `espeak` sounds like 1998. Linux narration worth listening to means installing piper.
