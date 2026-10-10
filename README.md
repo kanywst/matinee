@@ -151,7 +151,7 @@ Chapters come from section comments:
 
 If your tape assumes a built binary, build it first. matinee runs the tape verbatim and builds nothing for you.
 
-Two things the chapter walker does not follow: a tape that pulls its steps in with `Source other.tape` is read as written, so the sections in the included file are not found, and the timing estimate for it will be short. Keep the sections in the tape you point `tapeRel` at.
+A tape that pulls settings or steps in with `Source other.tape` is expanded the way VHS expands it, so sections in the included file become chapters and its `Set` lines are scaled with the rest. The path resolves against `repoDir`, where the tape is run, not against the tape's own directory, so to list the sections of such a tape yourself, pass `--base-dir <repoDir>` to `tape_timeline.py`. As in VHS, a sourced tape cannot `Source` another.
 
 ## How it works
 

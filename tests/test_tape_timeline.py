@@ -17,7 +17,9 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from tape_timeline import (
+    TapeError,
     clean_title,
+    inline_sources,
     is_section_comment,
     parse_duration,
     scale_marks,
@@ -373,3 +375,121 @@ class TestVHSConstructs:
 
     def test_a_hash_inside_a_string_is_not_a_comment(self) -> None:
         assert elapsed('Set TypingSpeed 100ms\nType "#!/bin/sh"\n') == 900.0
+
+
+class TestSource:
+    """`Source other.tape` is expanded the way VHS's own parser expands it.
+
+    Read as written, a tape that keeps its steps in a shared file lost those
+    sections and their time, and the short estimate scaled every other mark.
+    """
+
+    def test_sections_in_the_sourced_tape_become_chapters(self, tmp_path: Path) -> None:
+        (tmp_path / "steps.tape").write_text('# Search\nType "/"\nSleep 1s\n')
+        tape = '# Launch\nType "app"\nSleep 1s\nSource steps.tape\n'
+        assert titles(inline_sources(tape, tmp_path)) == ["Launch", "Search"]
+
+    def test_the_sourced_steps_are_timed(self, tmp_path: Path) -> None:
+        (tmp_path / "steps.tape").write_text("Sleep 2s\n")
+        tape = "Sleep 1s\nSource steps.tape\nSleep 1s\n"
+        assert elapsed(inline_sources(tape, tmp_path)) == 4000.0
+
+    def test_a_quoted_path_and_a_trailing_comment(self, tmp_path: Path) -> None:
+        (tmp_path / "steps.tape").write_text("Sleep 2s\n")
+        tape = 'Source "steps.tape" # the shared part\n'
+        assert elapsed(inline_sources(tape, tmp_path)) == 2000.0
+
+    def test_the_path_resolves_against_the_base_dir(self, tmp_path: Path) -> None:
+        (tmp_path / "tapes").mkdir()
+        (tmp_path / "tapes" / "steps.tape").write_text("Sleep 2s\n")
+        assert elapsed(inline_sources("Source tapes/steps.tape\n", tmp_path)) == 2000.0
+
+    def test_the_sourced_output_is_dropped(self, tmp_path: Path) -> None:
+        (tmp_path / "steps.tape").write_text('Output other.gif\nType "a"\n')
+        assert "Output" not in inline_sources("Source steps.tape\n", tmp_path)
+
+    def test_a_comment_on_the_source_line_labels_the_sourced_steps(
+        self, tmp_path: Path
+    ) -> None:
+        (tmp_path / "steps.tape").write_text('Type "/"\nSleep 1s\n')
+        tape = 'Type "app"\nSleep 1s\n# Search\nSource steps.tape\n'
+        assert titles(inline_sources(tape, tmp_path)) == ["Search"]
+
+    def test_comments_either_side_of_the_boundary_do_not_merge(
+        self, tmp_path: Path
+    ) -> None:
+        # Unfenced, the two one-line comments read as one two-line prose block
+        # and the chapter disappears. Fenced, they are two adjacent sections
+        # and the later one wins, as anywhere else in a tape.
+        (tmp_path / "steps.tape").write_text('# Search\nType "/"\nSleep 1s\n')
+        tape = 'Type "app"\nSleep 1s\n# Shared steps\nSource steps.tape\n'
+        assert titles(inline_sources(tape, tmp_path)) == ["Search"]
+
+    def test_a_tape_without_source_is_unchanged(self, tmp_path: Path) -> None:
+        tape = (FIXTURES / "y509.tape").read_text(encoding="utf-8")
+        assert timeline(inline_sources(tape, tmp_path)) == timeline(tape)
+
+    def test_a_missing_file_is_an_error(self, tmp_path: Path) -> None:
+        with pytest.raises(TapeError, match=r"missing\.tape"):
+            inline_sources("Source missing.tape\n", tmp_path)
+
+    @pytest.mark.parametrize("path", ["01-steps.tape", "/abs/steps.tape"])
+    def test_a_path_vhs_cannot_lex_unquoted_is_an_error(
+        self, tmp_path: Path, path: str
+    ) -> None:
+        with pytest.raises(TapeError, match="unquoted"):
+            inline_sources(f"Source {path}\n", tmp_path)
+
+    def test_a_quoted_path_may_start_with_a_digit(self, tmp_path: Path) -> None:
+        (tmp_path / "01-steps.tape").write_text("Sleep 2s\n")
+        assert elapsed(inline_sources('Source "01-steps.tape"\n', tmp_path)) == 2000.0
+
+    def test_a_non_tape_file_is_an_error(self, tmp_path: Path) -> None:
+        with pytest.raises(TapeError, match=r"\.tape files"):
+            inline_sources("Source steps.txt\n", tmp_path)
+
+    def test_an_empty_sourced_tape_is_an_error(self, tmp_path: Path) -> None:
+        (tmp_path / "steps.tape").write_text("")
+        with pytest.raises(TapeError, match="empty"):
+            inline_sources("Source steps.tape\n", tmp_path)
+
+    def test_a_nested_source_is_an_error(self, tmp_path: Path) -> None:
+        # VHS refuses it too: "Nested Source detected".
+        (tmp_path / "a.tape").write_text("Source b.tape\n")
+        (tmp_path / "b.tape").write_text("Sleep 1s\n")
+        with pytest.raises(TapeError, match="Source of its own"):
+            inline_sources("Source a.tape\n", tmp_path)
+
+    def test_cli_resolves_source_against_the_working_directory(
+        self, tmp_path: Path
+    ) -> None:
+        # The way VHS resolves it: from where it runs, not from the tape. A
+        # tape in docs/ sources docs/steps.tape, not steps.tape.
+        (tmp_path / "docs").mkdir()
+        (tmp_path / "docs" / "steps.tape").write_text('# Search\nType "/"\nSleep 1s\n')
+        main = tmp_path / "docs" / "demo.tape"
+        main.write_text('# Launch\nType "app"\nSleep 1s\nSource docs/steps.tape\n')
+        script = Path(__file__).parent.parent / "scripts" / "tape_timeline.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "docs/demo.tape"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=tmp_path,
+        )
+        assert [m["title"] for m in json.loads(result.stdout)] == ["Launch", "Search"]
+
+    def test_cli_inline_prints_the_expanded_tape(self, tmp_path: Path) -> None:
+        (tmp_path / "steps.tape").write_text("Sleep 2s\n")
+        main = tmp_path / "demo.tape"
+        main.write_text("Source steps.tape\n")
+        script = Path(__file__).parent.parent / "scripts" / "tape_timeline.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "--inline", str(main)],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=tmp_path,
+        )
+        assert "Sleep 2s" in result.stdout
+        assert "Source" not in result.stdout
