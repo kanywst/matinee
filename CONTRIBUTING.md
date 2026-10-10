@@ -47,6 +47,6 @@ The unit tests cover the parts that have actually broken: the tape walker, the c
 
 ## Things worth knowing before you dig in
 
-- `record.sh` deliberately takes VHS's PNG frame output instead of its own encoders, which fail silently against ffmpeg 9.x.
+- `record.sh` deliberately takes VHS's PNG frame output instead of its own encoders. VHS v0.12.0's encoders failed silently, and frame output also leaves the codec and the window chrome to matinee.
 - `project.json` is generated, not hand-edited. `build_project.py` owns it.
 - Chapter timings are an estimate scaled to the measured clip length. If you make the estimate better, the scaling should still stay — the recording is not reproducible.

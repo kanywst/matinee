@@ -10,12 +10,11 @@
 # with our own ffmpeg.
 #
 # Why frames and not `Output demo.mp4`:
-#   VHS v0.12.0 shells out to ffmpeg for every encoded output, and against
-#   ffmpeg 9.x that call fails silently -- it logs "Creating ...mp4" and writes
-#   nothing, with the same result for gif. Frame output is written by VHS
-#   itself with no ffmpeg involved, so it is the one path that still works.
-#   Encoding here also means we pick the codec and CRF instead of inheriting
-#   VHS's.
+#   VHS v0.12.0's encoded outputs fail silently -- it logs "Creating ...mp4"
+#   and writes nothing, for gif too (charmbracelet/vhs#787, fixed in v0.12.1).
+#   Frame output is written by VHS itself with no ffmpeg involved, so it works
+#   on every version. Encoding here also means we pick the codec and CRF
+#   instead of inheriting VHS's.
 #
 # What this loses, and where it comes back:
 #   VHS adds the window bar, padding and rounded corners in that same ffmpeg
