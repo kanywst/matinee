@@ -159,7 +159,8 @@ A tape that pulls settings or steps in with `Source other.tape` is expanded the 
 your-repo/demo.tape
         │
         ├─ record    run the tape, encode the frames          → terminal.mp4
-        ├─ build     chapter titles + timings, from the tape  → project.json
+        │            note the frame each chapter starts on    → marks.json
+        ├─ build     chapter titles + measured starts         → project.json
         ├─ narrate   your lines, spoken                       → narration.wav
         ├─ captions  word-level timings, from the audio       → project.json
         └─ render    composite, both aspect ratios            → out/*.mp4
@@ -179,14 +180,13 @@ captionFixes:
 
 Fixes apply per word, after transcription, to every occurrence — so they suit a distinctive mishearing, not a common word. `captions.py` reports which ones it applied and warns about any that never matched.
 
-**Timings are estimated, then scaled.** The tape walk models typing and sleeps but not render time, so it over-shoots; the marks are scaled to the recording's measured length.
+**Chapter starts are measured, not guessed.** `record.sh` puts a VHS `Screenshot` in front of each chapter's first statement. VHS notes which frame that lands on and later hands the frame to `ffmpeg`, and a stand-in `ffmpeg` on its `PATH` writes the frame number down instead of rendering it. So a step that is slow to respond moves only the chapters after it, by exactly as long as it took. If the measurement is missing or stale (the tape was edited after recording, or an older recording has no `marks.json`), `build_project.py` warns. It then falls back to an estimate: the tape walk models typing and sleeps, and the result is scaled to the recording's length.
 
 **VHS writes frames, matinee encodes them.** The recording takes VHS's PNG frame output rather than its GIF or MP4, so the codec and quality are matinee's choice, and the window chrome VHS would have drawn is redrawn in `TerminalStage.tsx` instead. This began as a workaround: VHS v0.12.0's encoders wrote nothing while still exiting 0, a bug fixed in v0.12.1 ([charmbracelet/vhs#788](https://github.com/charmbracelet/vhs/pull/788)). Frame output works on either version.
 
 ## Limitations
 
-- **The recording is not reproducible.** A tape may fetch and build before it records, so clip length depends on the machine and on cache state. That is why the chapter marks are scaled to the measured duration rather than trusted from the estimate.
-- **Chapter timings drift within a tape.** Scaling corrects the total, not a demo with one unusually slow step.
+- **The recording is not reproducible.** A tape may fetch and build before it records, so clip length depends on the machine and on cache state. The chapter marks are measured from each recording for that reason. Narration written to fit a chapter on one machine can still overrun it on a slower one.
 - **`say` is macOS-only**, and `espeak` sounds like 1998. Linux narration worth listening to means installing piper.
 
 ## Contributing

@@ -8,9 +8,11 @@
     scripts/build_project.py projects/y509/script.yaml
 
 project.json is the single object Remotion renders from. It is generated, not
-hand written: the chapter titles and timings come from the repo's VHS tape, the
-narration text from script.yaml, the clip length from the recorded mp4, and the
-captions from whatever captions.py last produced.
+hand written: the chapter titles come from the repo's VHS tape, their start
+times from the frames record.sh measured (marks.json) or, failing that, from an
+estimate walked off the tape, the narration text from script.yaml, the clip
+length from the recorded mp4, and the captions from whatever captions.py last
+produced.
 
 Run this after record.sh, and again after captions.py -- it is idempotent and
 preserves captions that are already on disk.
@@ -26,7 +28,13 @@ import sys
 from pathlib import Path
 
 import yaml
-from tape_timeline import TapeError, inline_sources, scale_marks, timeline
+from tape_timeline import (
+    TapeError,
+    inline_sources,
+    measured_marks,
+    scale_marks,
+    timeline,
+)
 
 
 def probe_duration_ms(path: Path) -> int:
@@ -148,7 +156,26 @@ def main() -> None:
     # Shared with the CLI so the two cannot drift, and so the case where the
     # trailing-section filter would empty the list is handled once.
     all_titles = {m["title"] for m in marks}
-    marks = scale_marks(marks, estimated, duration_ms)
+    marks_path = asset_dir / "marks.json"
+    measured = measured_marks(
+        marks,
+        json.loads(marks_path.read_text()) if marks_path.exists() else None,
+        duration_ms,
+    )
+    if measured is not None:
+        marks = scale_marks(measured, None, duration_ms)
+        timing = "measured"
+    else:
+        if marks_path.exists():
+            # Most often the tape was edited after the recording, so its
+            # chapters no longer line up with the frames that were measured.
+            print(
+                f"warning: {marks_path} does not match this recording and "
+                "tape; chapter starts are estimated. Re-run record.sh.",
+                file=sys.stderr,
+            )
+        marks = scale_marks(marks, estimated, duration_ms)
+        timing = "estimated"
     kept_titles = {m["title"] for m in marks}
 
     narration = script.get("narration", {}) or {}
@@ -242,7 +269,7 @@ def main() -> None:
     out_path.write_text(json.dumps(project, indent=2, ensure_ascii=False) + "\n")
     print(f"==> wrote {out_path}")
     print(
-        f"    {len(chapters)} chapters, {duration_ms}ms, "
+        f"    {len(chapters)} chapters ({timing}), {duration_ms}ms, "
         f"{len(project['captions'])} captions"
     )
 

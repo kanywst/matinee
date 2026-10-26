@@ -160,6 +160,15 @@ jobs:
           echo "chapters: ${chapters}"
           test "$chapters" -eq 2
 
+          # The chapter starts rest on how VHS renders a Screenshot. Should a
+          # VHS release change that, the build quietly falls back to the
+          # estimate -- so fail here instead.
+          cat public/projects/hello/marks.json
+          python3 -c "import json,sys; \
+            f=json.load(open('public/projects/hello/marks.json'))['frames']; \
+            sys.exit(0 if len(f) == 2 and all(isinstance(n, int) for n in f) else 1)" \
+            || { echo "::error::chapter starts were not measured"; exit 1; }
+
   # Advisory, not merge-blocking: reports newly introduced findings into Code
   # Scanning without gating on the existing backlog.
   zizmor:

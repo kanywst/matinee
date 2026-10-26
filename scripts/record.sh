@@ -59,10 +59,41 @@ mkdir -p "$OUT_DIR"
 # itself, GNU mktemp requires the X's and errors with "too few X's in
 # template" without them.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/vhs-${PROJECT_ID}.XXXXXX")"
+# macOS's TMPDIR ends in a slash, so WORK holds a `//`. tape_timeline.py
+# normalises it away in the Screenshot paths it writes, and the marks below are
+# matched against those paths as text -- so normalise it here too.
+WORK="$(cd "$WORK" && pwd)"
 trap 'rm -rf "$WORK"' EXIT
 FRAMES="$WORK/frames"
 TMP_TAPE="$WORK/recording.tape"
 EXPANDED="$WORK/expanded.tape"
+MARKS="$WORK/marks"
+MARKS_LOG="$WORK/marks.log"
+OUT_MARKS="$OUT_DIR/marks.json"
+
+# Chapter starts are measured, not estimated: tape_timeline.py puts a
+# Screenshot at each chapter, VHS notes the frame it captures next, and after
+# recording it renders that frame by running `ffmpeg ... frame-text-NNNNN.png
+# .../mark-<i>.png`. This shim, first on vhs's PATH, logs those calls instead
+# of rendering them -- the frame number is all we want. Every other ffmpeg
+# call, including any the tape's own shell makes, goes through untouched.
+# Only the two paths are logged: VHS's filter graph spans several lines.
+mkdir -p "$WORK/bin" "$MARKS"
+: > "$MARKS_LOG"
+cat > "$WORK/bin/ffmpeg" <<SHIM
+#!/usr/bin/env bash
+case "\${@: -1}" in
+  $(printf '%q' "$MARKS")/*)
+    for arg; do
+      case "\$arg" in
+        *frame-text-*.png) printf '%s %s\n' "\$arg" "\${@: -1}" >> $(printf '%q' "$MARKS_LOG") ;;
+      esac
+    done
+    exit 0 ;;
+esac
+exec $(printf '%q' "$(command -v ffmpeg)") "\$@"
+SHIM
+chmod +x "$WORK/bin/ffmpeg"
 
 # Source is expanded here rather than left to vhs, with the same code that
 # reads the chapters: the Set lines of an included tape then get scaled with
@@ -70,7 +101,9 @@ EXPANDED="$WORK/expanded.tape"
 # shared config.tape would stay at 1x while the main tape's FontSize doubled --
 # the reflow the scaling note above warns about.
 uv run --quiet "$PIPELINE_DIR/scripts/tape_timeline.py" \
-  --inline --base-dir "$REPO_DIR" "$TAPE_PATH" > "$EXPANDED"
+  --inline --mark-dir "$MARKS" --base-dir "$REPO_DIR" "$TAPE_PATH" > "$EXPANDED"
+# Not counting the tape's own Screenshots, if it has any.
+MARK_COUNT="$(grep -cF "Screenshot \"$MARKS/" "$EXPANDED" || true)"
 
 # VHS's default framerate; a tape may override it with `Set Framerate`.
 FRAMERATE="$(awk '
@@ -104,7 +137,7 @@ awk -v frames="$FRAMES" -v scale="$SCALE" '
 
 echo "==> recording $PROJECT_ID (scale ${SCALE}x, ${FRAMERATE}fps)"
 # The tape's own commands (go build, go run) assume the repo root.
-( cd "$REPO_DIR" && vhs "$TMP_TAPE" )
+( cd "$REPO_DIR" && PATH="$WORK/bin:$PATH" vhs "$TMP_TAPE" )
 
 FRAME_COUNT="$(find "$FRAMES" -name 'frame-text-*.png' | wc -l | tr -d ' ')"
 [ "$FRAME_COUNT" -gt 0 ] || { echo "error: vhs produced no frames" >&2; exit 70; }
@@ -128,3 +161,20 @@ echo "==> wrote $OUT_MP4"
 ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate \
   -of default=noprint_wrappers=1 "$OUT_MP4"
 echo "==> terminalDurationMs: $DURATION_MS"
+
+# One frame per chapter, in chapter order; null where VHS never rendered the
+# screenshot. build_project.py checks the whole record against the clip and
+# the tape, and falls back to the estimate if anything is off.
+FRAME_LIST="$(sed -nE 's/.*frame-text-0*([0-9]+)\.png.*mark-0*([0-9]+)\.png$/\2 \1/p' "$MARKS_LOG" \
+  | awk -v n="$MARK_COUNT" '
+      { frame[$1] = $2 }
+      END {
+        for (i = 0; i < n; i++) {
+          printf "%s%s", (i ? ", " : ""), ((i in frame) ? frame[i] : "null")
+          if (!(i in frame)) missing++
+        }
+        if (missing) printf "warning: %d of %d chapter marks were not measured\n", missing, n > "/dev/stderr"
+      }')"
+printf '{"framerate": %s, "durationMs": %s, "frames": [%s]}\n' \
+  "$FRAMERATE" "$DURATION_MS" "$FRAME_LIST" > "$OUT_MARKS"
+echo "==> chapter marks at frames [$FRAME_LIST] -> $OUT_MARKS"
