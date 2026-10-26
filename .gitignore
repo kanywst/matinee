@@ -8,6 +8,7 @@ __pycache__/
 node_modules/
 out/
 public/projects/*/broll.mp4
+public/projects/*/marks.json
 public/projects/*/narration.wav
 public/projects/*/terminal.mp4
 hello-props.json
@@ -16,3 +17,6 @@ hello-props.json
 # together, and checking them in is what lets a bare clone render something.
 !public/projects/hello/terminal.mp4
 !public/projects/hello/narration.wav
+# The chapter frames that recording was measured at; without them a bare
+# clone's build_project.py would fall back to the estimate.
+!public/projects/hello/marks.json

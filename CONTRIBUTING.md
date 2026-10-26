@@ -49,4 +49,4 @@ The unit tests cover the parts that have actually broken: the tape walker, the c
 
 - `record.sh` deliberately takes VHS's PNG frame output instead of its own encoders. VHS v0.12.0's encoders failed silently, and frame output also leaves the codec and the window chrome to matinee.
 - `project.json` is generated, not hand-edited. `build_project.py` owns it.
-- Chapter timings are an estimate scaled to the measured clip length. If you make the estimate better, the scaling should still stay — the recording is not reproducible.
+- Chapter starts are measured: `record.sh` asks VHS for a screenshot at each chapter and reads the frame number off the `ffmpeg` call VHS makes for it. The tape walk's estimate, scaled to the clip length, is only the fallback when that measurement is missing or stale. Both read the chapters off the same walk (`tape_timeline.walk`), which is what keeps them matched up in order.

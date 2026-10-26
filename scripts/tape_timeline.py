@@ -42,6 +42,14 @@ statements on one line (`Down Sleep 700ms`, used seven times in prpr's tape).
 That is an estimate, not a measurement. Pass --duration-ms with the true clip
 length and every mark is scaled to fit it.
 
+Measuring
+---------
+Scaling fixes the total, not one slow step in the middle. So record.sh does
+not rely on the estimate: `--inline --mark-dir DIR` puts a `Screenshot` in
+front of each chapter's first statement, VHS records which frame each one
+landed on, and build_project.py takes the chapter starts from those frames
+(measured_marks). The estimate is what's left when there is no measurement.
+
 Source
 ------
 `Source other.tape` is expanded in place before the walk, the way VHS's parser
@@ -59,6 +67,7 @@ import argparse
 import json
 import re
 import sys
+from itertools import pairwise
 from pathlib import Path
 
 DURATION_RE = re.compile(r"^([0-9.]+)(ms|s|m)?$")
@@ -230,6 +239,12 @@ def is_section_comment(lines: list[str], i: int) -> tuple[str, bool] | None:
 
 
 def timeline(tape: str) -> tuple[list[dict], float]:
+    marks, now = walk(tape)
+    return [{"title": m["title"], "startMs": m["startMs"]} for m in marks], now
+
+
+def walk(tape: str) -> tuple[list[dict], float]:
+    """timeline(), plus the index of the line each mark was placed before."""
     typing_speed = 50.0  # VHS default
     now = 0.0
     hidden = False
@@ -291,7 +306,7 @@ def timeline(tape: str) -> tuple[list[dict], float]:
                 if not numbered:
                     pending = None
             elif has_action:
-                marks.append({"title": title, "startMs": round(now)})
+                marks.append({"title": title, "startMs": round(now), "line": i})
                 pending = None
             # Otherwise keep it: a configuration line between the comment and
             # the action it labels should not consume the mark.
@@ -374,10 +389,14 @@ def timeline(tape: str) -> tuple[list[dict], float]:
 
 
 def scale_marks(
-    marks: list[dict], estimated: float, duration_ms: int | None
+    marks: list[dict], estimated: float | None, duration_ms: int | None
 ) -> list[dict]:
-    """Fit the marks to the true clip length and drop the teardown section."""
-    if duration_ms and estimated > 0:
+    """Fit the marks to the true clip length and drop the teardown section.
+
+    Pass estimated=None for marks that were measured rather than estimated:
+    they are already in the clip's time and only need the trimming.
+    """
+    if duration_ms and estimated:
         scale = duration_ms / estimated
         for mark in marks:
             mark["startMs"] = round(mark["startMs"] * scale)
@@ -396,6 +415,58 @@ def scale_marks(
         # the opening seconds have no label, which reads as a mistake.
         marks[0]["startMs"] = 0
     return marks
+
+
+def insert_screenshots(tape: str, mark_dir: Path) -> tuple[str, int]:
+    """Put a `Screenshot` in front of the statement each chapter starts on.
+
+    The walk above only estimates when a chapter starts: it models typing and
+    sleeps, not how long the program on screen takes to respond, so a slow
+    step pushes every later chapter late and scaling to the clip length only
+    spreads the error around. VHS knows the real answer. A Screenshot makes it
+    note the number of the next frame it captures, and after recording it
+    hands that frame's file to ffmpeg -- which record.sh intercepts to read the
+    number. Mark i is written to mark-<i>.png, so the frames can be matched
+    back to the chapters in order.
+
+    Returns the tape and the number of marks placed.
+    """
+    marks, _ = walk(tape)
+    at = {m["line"]: index for index, m in enumerate(marks)}
+    out: list[str] = []
+    for i, line in enumerate(tape.splitlines()):
+        if i in at:
+            out.append(f'Screenshot "{mark_dir}/mark-{at[i]:03d}.png"')
+        out.append(line)
+    return "\n".join(out) + "\n", len(marks)
+
+
+def measured_marks(
+    marks: list[dict], measured: dict | None, duration_ms: int
+) -> list[dict] | None:
+    """Replace each mark's estimate with the frame VHS recorded it at.
+
+    `measured` is the marks.json record.sh writes next to the recording. It is
+    only trusted when it describes this recording and this tape: the same clip
+    length, and one frame per mark, in order. Anything else -- a tape edited
+    since it was recorded, a VHS that never ran the screenshots -- returns
+    None, and the caller falls back to scaling the estimate.
+    """
+    if not measured or measured.get("durationMs") != duration_ms:
+        return None
+    frames = measured.get("frames") or []
+    framerate = measured.get("framerate") or 0
+    if len(frames) != len(marks) or framerate <= 0:
+        return None
+    if any(not isinstance(f, int) or f < 1 for f in frames):
+        return None
+    if any(a >= b for a, b in pairwise(frames)):
+        return None
+    # Frame 1 is the first image of the clip, so it starts at 0ms.
+    return [
+        {"title": m["title"], "startMs": round((frame - 1) * 1000 / framerate)}
+        for m, frame in zip(marks, frames, strict=True)
+    ]
 
 
 def main() -> None:
@@ -418,6 +489,12 @@ def main() -> None:
         action="store_true",
         help="print the tape with every Source expanded, and nothing else",
     )
+    parser.add_argument(
+        "--mark-dir",
+        type=Path,
+        default=None,
+        help="with --inline: add a Screenshot into this directory at each chapter",
+    )
     args = parser.parse_args()
 
     base_dir = args.base_dir if args.base_dir is not None else Path.cwd()
@@ -426,6 +503,8 @@ def main() -> None:
     except TapeError as exc:
         sys.exit(f"error: {args.tape}: {exc}")
     if args.inline:
+        if args.mark_dir is not None:
+            tape, _ = insert_screenshots(tape, args.mark_dir)
         sys.stdout.write(tape)
         return
 

@@ -20,7 +20,9 @@ from tape_timeline import (
     TapeError,
     clean_title,
     inline_sources,
+    insert_screenshots,
     is_section_comment,
+    measured_marks,
     parse_duration,
     scale_marks,
     split_qualifier,
@@ -493,3 +495,97 @@ class TestSource:
         )
         assert "Sleep 2s" in result.stdout
         assert "Source" not in result.stdout
+
+
+class TestInsertScreenshots:
+    def test_one_screenshot_before_each_chapter(self) -> None:
+        tape = (
+            "Set Width 900\n"
+            "# Setup\n"
+            "Hide\n"
+            'Type "make"\n'
+            "Show\n"
+            "\n"
+            "# Launch\n"
+            'Type "app"\n'
+            "Sleep 1s\n"
+            "\n"
+            "# Search\n"
+            "Set TypingSpeed 10ms\n"
+            "Down Sleep 700ms\n"
+        )
+        out, count = insert_screenshots(tape, Path("/m"))
+        lines = out.splitlines()
+        assert count == 2
+        # Placed against the statement the chapter starts on, not the comment:
+        # the Set between "# Search" and its first key does not start it.
+        assert lines[lines.index('Type "app"') - 1] == 'Screenshot "/m/mark-000.png"'
+        assert lines[lines.index("Down Sleep 700ms") - 1] == (
+            'Screenshot "/m/mark-001.png"'
+        )
+        # Nothing inside the Hide block: VHS captures no frame there.
+        assert out.count("Screenshot") == 2
+
+    def test_marks_follow_the_same_walk_as_the_chapters(self) -> None:
+        for name in ("y509.tape", "prpr.tape", "brtc.tape"):
+            tape = (FIXTURES / name).read_text(encoding="utf-8")
+            out, count = insert_screenshots(tape, Path("/m"))
+            assert count == len(timeline(tape)[0])
+            assert out.count('Screenshot "/m/') == count
+            # The inserted lines are not statements the walk counts, so the
+            # chapters read off the marked tape are the same ones.
+            assert timeline(out) == timeline(tape)
+
+    def test_cli_mark_dir(self) -> None:
+        script = Path(__file__).parent.parent / "scripts" / "tape_timeline.py"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--inline",
+                "--mark-dir",
+                "/m",
+                str(FIXTURES / "y509.tape"),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        # Ten, one more than the chapters: the teardown section is measured
+        # like the rest and only trimmed once the clip length is known.
+        assert result.stdout.count('Screenshot "/m/mark-') == 10
+
+
+MARKS = [{"title": "a", "startMs": 0}, {"title": "b", "startMs": 2729}]
+
+
+class TestMeasuredMarks:
+    def test_frames_become_start_times(self) -> None:
+        # The hello tape as VHS recorded it: the second chapter's first key
+        # landed on frame 73 at 24fps, 270ms after the estimate.
+        measured = {"framerate": 24, "durationMs": 7291, "frames": [1, 73]}
+        assert measured_marks(MARKS, measured, 7291) == [
+            {"title": "a", "startMs": 0},
+            {"title": "b", "startMs": 3000},
+        ]
+
+    @pytest.mark.parametrize(
+        "measured",
+        [
+            None,
+            # Another recording: the clip length is the fingerprint.
+            {"framerate": 24, "durationMs": 9999, "frames": [1, 73]},
+            # The tape gained or lost a chapter since it was recorded.
+            {"framerate": 24, "durationMs": 7291, "frames": [1, 30, 73]},
+            # VHS never rendered one of the screenshots.
+            {"framerate": 24, "durationMs": 7291, "frames": [1, None]},
+            {"framerate": 24, "durationMs": 7291, "frames": [73, 1]},
+            {"framerate": 0, "durationMs": 7291, "frames": [1, 73]},
+        ],
+    )
+    def test_anything_off_falls_back(self, measured: dict | None) -> None:
+        assert measured_marks(MARKS, measured, 7291) is None
+
+    def test_measured_marks_are_not_rescaled(self) -> None:
+        marks = [{"title": "a", "startMs": 0}, {"title": "b", "startMs": 3000}]
+        assert scale_marks(marks, None, 7291)[1]["startMs"] == 3000
