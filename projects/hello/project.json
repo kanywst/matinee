@@ -4,7 +4,7 @@
   "subtitle": "The smallest complete example — a tape, two chapters, and a narrated video out the other end.",
   "repo": "github.com/kanywst/matinee",
   "accent": "#a6e3a1",
-  "terminalDurationMs": 7000,
+  "terminalDurationMs": 6958,
   "terminalWidth": 832,
   "terminalHeight": 336,
   "chapters": [
@@ -15,7 +15,7 @@
     },
     {
       "title": "Say goodbye",
-      "startMs": 2729,
+      "startMs": 2875,
       "narration": "Narration comes from this file, and the captions from the audio."
     }
   ],
@@ -24,94 +24,94 @@
     {
       "text": "Chapters",
       "startMs": 20,
-      "endMs": 580
+      "endMs": 620
     },
     {
       "text": "come",
-      "startMs": 580,
-      "endMs": 870
+      "startMs": 620,
+      "endMs": 930
     },
     {
       "text": "from",
-      "startMs": 870,
-      "endMs": 1160
+      "startMs": 930,
+      "endMs": 1240
     },
     {
       "text": "your",
-      "startMs": 1160,
-      "endMs": 1450
+      "startMs": 1240,
+      "endMs": 1550
     },
     {
       "text": "tape's",
-      "startMs": 1450,
-      "endMs": 1880
+      "startMs": 1550,
+      "endMs": 2010
     },
     {
       "text": "own",
-      "startMs": 1880,
-      "endMs": 2120
+      "startMs": 2010,
+      "endMs": 2870
     },
     {
       "text": "comments.",
-      "startMs": 2120,
-      "endMs": 2880
+      "startMs": 2870,
+      "endMs": 3000
     },
     {
       "text": "Narration",
-      "startMs": 2880,
-      "endMs": 3460
+      "startMs": 3000,
+      "endMs": 3580
     },
     {
       "text": "comes",
-      "startMs": 3460,
-      "endMs": 3780
+      "startMs": 3580,
+      "endMs": 3900
     },
     {
       "text": "from",
-      "startMs": 3780,
-      "endMs": 4040
+      "startMs": 3900,
+      "endMs": 4160
     },
     {
       "text": "this",
-      "startMs": 4040,
-      "endMs": 4300
+      "startMs": 4160,
+      "endMs": 4420
     },
     {
       "text": "file,",
-      "startMs": 4300,
-      "endMs": 4720
+      "startMs": 4420,
+      "endMs": 4840
     },
     {
       "text": "and",
-      "startMs": 4720,
-      "endMs": 4890
+      "startMs": 4840,
+      "endMs": 5020
     },
     {
       "text": "the",
-      "startMs": 4890,
-      "endMs": 5040
+      "startMs": 5020,
+      "endMs": 5160
     },
     {
       "text": "captions",
-      "startMs": 5040,
-      "endMs": 5610
+      "startMs": 5160,
+      "endMs": 5880
     },
     {
       "text": "from",
-      "startMs": 5610,
-      "endMs": 5750
+      "startMs": 5880,
+      "endMs": 5910
     },
     {
       "text": "the",
-      "startMs": 5750,
-      "endMs": 5920
+      "startMs": 5910,
+      "endMs": 6090
     },
     {
       "text": "audio.",
-      "startMs": 5920,
-      "endMs": 6240
+      "startMs": 6090,
+      "endMs": 6400
     }
   ],
-  "captionsForDurationMs": 7000,
+  "captionsForDurationMs": 6958,
   "audioSrc": "projects/hello/narration.wav"
 }
