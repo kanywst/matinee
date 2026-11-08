@@ -15,6 +15,9 @@ https://github.com/user-attachments/assets/a5e3764a-c2af-4185-9358-72b9c32003a2
 
 Turn a [VHS](https://github.com/charmbracelet/vhs) `.tape` into a narrated, chaptered demo video.
 
+> [!NOTE]
+> **matinee is a personal tool.** I built it to make demo videos for my own repos, and each project is added by committing `projects/<id>/script.yaml` into this repo. It is not a general-purpose tool, and it may change or break without notice. You are welcome to fork it or borrow from it.
+
 [Quick start](#quick-start) · [Adding your repo](#adding-your-repo) · [How it works](#how-it-works) · [Limitations](#limitations)
 
 ## What it does
